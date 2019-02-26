@@ -22,15 +22,22 @@
 ## TODO
 
 - Batch Normalization
-
 - 代码优化
-
 - L2 正则化
+
+## 安装
+
+```python
+python3 setup.py install
+```
 
 
 ## 使用方法
 
+### 基础
+
 定义神经网络结构：
+
 ```python
 nn_architecture: List[Dict] = [
     {   # 第一层
@@ -96,3 +103,4 @@ nn.plot_history()
 ```python
 nn.test_model(x_test, y_test)
 ```
+
