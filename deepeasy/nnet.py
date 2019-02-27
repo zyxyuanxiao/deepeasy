@@ -10,7 +10,7 @@ import time
 import numpy as np
 
 from .activations import get_activation_func
-from .optimizations import get_gd_func
+from .optimizations import get_gd
 from .costs import get_cost_func
 from .plot import plot_nn_history
 from .types import *
@@ -49,12 +49,7 @@ class NeuralNetwork:
 
         # 当训练时指定了归一化输入，此变量会被设为 True
         # 用于测试模型和预测时
-        self.batch_normalization: bool = False
-        # 保存归一化的参数
-        self.normalize_params: Dict[str, float] = {
-            'mu': 0.,
-            'sigma_square': 1.
-        }
+        self.batch_normalization: bool = True
 
         # dropout 每层神经元保留概率
         self.dropout_keep_probs: Dict[str, float] = {}
@@ -62,7 +57,7 @@ class NeuralNetwork:
         self.train_count: int = 0  # 记录训练次数
         self.history: Dict[str, List[float]] = {}  # cost 记录等
 
-        self.params_values: Dict[str, ndarray] = {}  # 存放参数
+        self.params: Dict[str, ndarray] = {}  # 存放参数
         self.activation_funcs: Dict[str, Callable] = {}  # 存放激活函数，和其求导
 
         self.init_layers(seed)
@@ -74,9 +69,9 @@ class NeuralNetwork:
               *,
               new_train: bool = False,
               batch_size: int = 0,
-              learning_rate: float = 0.01,
+              lr: float = 0.01,
               batch_normalization: bool = True,
-              gd_func_name: str = 'normal',
+              gd_name: str = 'sgd',
               momentum_beta: float = 0.9,
               rmsprop_beta: float = 0.999,
               l2_lambda: Optional[float] = None,
@@ -88,9 +83,9 @@ class NeuralNetwork:
         :param epochs:
         :param new_train:
         :param batch_size:
-        :param learning_rate:
+        :param lr: 学习率
         :param batch_normalization:
-        :param gd_func_name: 梯度下降的算法
+        :param gd_name: 梯度下降的算法
         :param momentum_beta:
         :param rmsprop_beta:
         :param l2_lambda:
@@ -109,10 +104,9 @@ class NeuralNetwork:
             self.reset_params(keep_history=True)
 
         # 正则化输入
-        if batch_normalization:
-            self.batch_normalization = True
+        self.batch_normalization = batch_normalization
 
-        gd_func = get_gd_func(gd_func_name)
+        gd = get_gd(gd_name, lr, momentum_beta, rmsprop_beta)
         cost_func = get_cost_func(cost_func_name)
 
         print(f'开始训练，迭代次数：{epochs}')
@@ -124,7 +118,7 @@ class NeuralNetwork:
             t: int = 0
             cost: float = 0.
             accuracy: float = 0.
-            optimization_caches: Dict[str, ndarray] = {}  # 缓存每次迭代优化算法的值
+            gd.reset()
 
             for x_batch, y_batch in self.mini_batch(x_train, y_train, batch_size):
 
@@ -145,17 +139,8 @@ class NeuralNetwork:
                     a, y_batch, forward_caches
                 )
 
-                # 应用相应优化算法
-                backward_caches = gd_func(
-                    backward_caches,
-                    optimization_caches,
-                    momentum_beta,
-                    rmsprop_beta,
-                    t
-                )
-
                 # 更新 w，b
-                self.update_params(backward_caches, learning_rate)
+                gd.update(self.params, backward_caches)
 
             self._add_to_history(cost=cost/t, accuracy=accuracy/t)
 
@@ -170,11 +155,7 @@ class NeuralNetwork:
                    y: ndarray) -> float:
 
         if self.batch_normalization:
-            # 使用训练数据集的归一化参数
-            # mu = self.normalize_params['mu']
-            # sigma_square = self.normalize_params['sigma_square']
-            # x = (x - mu) / sigma_square
-            self.normalize_batch(x)
+            x = self.normalize_batch(x)
         a = self.predict(x)
         return self.get_accuracy(a, y)
 
@@ -207,10 +188,8 @@ class NeuralNetwork:
             self.train_count += 1
 
         # 清空原来的参数
-        self.params_values.clear()
-        self.batch_normalization = False
-        self.normalize_params['mu'] = 0.
-        self.normalize_params['sigma_square'] = 1.
+        self.params.clear()
+        self.batch_normalization = True
 
         for layer_idx, layer in enumerate(self.nn_architecture, 1):
             self._init_per_layer_params(layer_idx, layer)
@@ -280,8 +259,8 @@ class NeuralNetwork:
         forward_caches = {'a0': a}
 
         for layer_idx in range(1, self.layers_count + 1):
-            w = self.params_values[f'w{layer_idx}']
-            b = self.params_values[f'b{layer_idx}']
+            w = self.params[f'w{layer_idx}']
+            b = self.params[f'b{layer_idx}']
             activation_func = self.activation_funcs[f'g{layer_idx}']
 
             z = a @ w + b
@@ -314,7 +293,7 @@ class NeuralNetwork:
             activation_func_prime = self.activation_funcs[f'g_prime{layer_idx}']
             z = forward_caches[f'z{layer_idx}']
             a_pre = forward_caches[f'a{layer_idx - 1}']
-            w = self.params_values[f'w{layer_idx}']
+            w = self.params[f'w{layer_idx}']
             if layer_idx == self.layers_count:
                 dz = (a - y) / batch_size
             else:
@@ -324,20 +303,12 @@ class NeuralNetwork:
 
             db = np.sum(dz, axis=LABELS_NUM_AXIS, keepdims=True)
 
-            backward_caches[f'dw{layer_idx}'] = dw
-            backward_caches[f'db{layer_idx}'] = db
+            backward_caches[f'w{layer_idx}'] = dw
+            backward_caches[f'b{layer_idx}'] = db
 
             da = dz @ w.T
 
         return backward_caches
-
-    def update_params(self, backward_caches: Dict, learning_rate: float) -> None:
-
-        for layer_idx in range(1, self.layers_count + 1):
-            self.params_values[f'w{layer_idx}'] -= \
-                learning_rate * backward_caches[f'dw{layer_idx}']
-            self.params_values[f'b{layer_idx}'] -= \
-                learning_rate * backward_caches[f'db{layer_idx}']
 
     # def l2_regularization(self, l2_lambda: float) -> float:
     #     all_w_sum = 0
@@ -364,9 +335,12 @@ class NeuralNetwork:
             return np.sum(a == y) / batch_size
         else:
             return np.sum(
-                a.argmax(axis=LABEL_FEATURES_NUM_AXIS) \
+                a.argmax(axis=LABEL_FEATURES_NUM_AXIS)
                 == y.argmax(axis=LABEL_FEATURES_NUM_AXIS)
             ) / batch_size
+
+    def plot_history(self):
+        plot_nn_history(self)
 
     def _init_per_layer_params(self, layer_idx: int, layer: Dict) -> None:
         """初始化权重和偏差。"""
@@ -381,17 +355,14 @@ class NeuralNetwork:
         n = layer_input_size
         if act and act.lower() == 'relu':
             n /= 2
-        self.params_values[f'w{layer_idx}'] = np.random.randn(
+        self.params[f'w{layer_idx}'] = np.random.randn(
             layer_input_size, layer_output_size
         ) / np.sqrt(n)
 
         # b 全初始化为 0
-        self.params_values[f'b{layer_idx}'] = np.zeros(
+        self.params[f'b{layer_idx}'] = np.zeros(
             shape=(1, layer_output_size)
         )
-
-    def plot_history(self):
-        plot_nn_history(self)
 
     def _add_to_history(self, **kwargs: float) -> None:
         for k, v in kwargs.items():

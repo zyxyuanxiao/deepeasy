@@ -10,23 +10,6 @@ from .types import *
 from .env import *
 
 
-def get_activation_func(name: Optional[str] = None) -> Tuple[Callable, Callable]:
-    if name is None:  # 代表不使用激活函数
-        return lambda z: z, lambda da, z: da
-
-    name = name.lower()
-    if name == 'relu':
-        return relu, relu_prime
-    elif name == 'softmax':
-        return softmax, softmax_prime
-    elif name == 'tanh':
-        return tanh, tanh_prime
-    elif name == 'sigmoid':
-        return sigmoid, sigmoid_prime
-    else:
-        raise Exception('Non-supported activation function')
-
-
 def relu(z: ndarray) -> ndarray:
     return np.maximum(z, 0)
 
@@ -60,3 +43,20 @@ def sigmoid(z: ndarray) -> ndarray:
 
 def sigmoid_prime(z: ndarray) -> ndarray:
     return sigmoid(z) * (1 - sigmoid(z))
+
+
+def get_activation_func(name: Optional[str] = None) -> Tuple[Callable, Callable]:
+    if name is None:  # 代表不使用激活函数
+        return lambda z: z, lambda da, z: da
+
+    name = name.lower()
+    if name == 'relu':
+        return relu, relu_prime
+    elif name == 'softmax':
+        return softmax, softmax_prime
+    elif name == 'tanh':
+        return tanh, tanh_prime
+    elif name == 'sigmoid':
+        return sigmoid, sigmoid_prime
+    else:
+        raise Exception('Non-supported activation function')

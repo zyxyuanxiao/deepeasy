@@ -10,122 +10,107 @@ from .types import *
 from .env import *
 
 
-def get_gd_func(name: str) -> Callable:
+class GD:
+
+    def __init__(self, lr=0.01) -> None:
+        self.lr: float = lr
+
+    def update(self, params, backward_caches) -> None:
+        raise NotImplementedError
+
+    def reset(self) -> None:
+        pass
+
+
+class SGD(GD):
+
+    def __init__(self, lr=0.01) -> None:
+        super().__init__(lr)
+
+    def update(self, params, backward_caches) -> None:
+        for key in params:
+            params[key] -= self.lr * backward_caches[key]
+
+
+class Momentum(GD):
+
+    def __init__(self, lr=0.01, beta=0.9) -> None:
+        super().__init__(lr)
+        self.beta = beta
+        self.v = {}
+
+    def update(self, params, backward_caches) -> None:
+
+        for k in params:
+            self.v[k] = self.beta * self.v.get(k, 0)\
+                        + (1. - self.beta) * backward_caches[k]
+            params[k] -= self.lr * self.v[k]
+
+    def reset(self) -> None:
+        self.v.clear()
+
+
+class RMSprop(GD):
+
+    def __init__(self, lr=0.01, beta=0.999) -> None:
+        super().__init__(lr)
+        self.beta = beta
+        self.s = {}
+
+    def update(self, params, backward_caches) -> None:
+
+        for k in params:
+            self.s[k] = self.beta * self.s.get(k, 0)\
+                        + (1. - self.beta) * backward_caches[k]**2
+            params[k] -= self.lr * (backward_caches[k] / np.sqrt(self.s[k] + DELTA))
+
+    def reset(self) -> None:
+        self.s.clear()
+
+
+class Adam(GD):
+
+    def __init__(self, lr=0.01, beta1=0.9, beta2=0.999) -> None:
+        super().__init__(lr)
+        self.beta1 = beta1
+        self.beta2 = beta2
+        self.v = {}
+        self.s = {}
+        self.iter = 0
+
+    def update(self, params, backward_caches) -> None:
+
+        self.iter += 1
+        lr_t = self.lr * np.sqrt(1.0 - self.beta2**self.iter)\
+            / (1.0 - self.beta1**self.iter)
+
+        for k in params:
+            self.v[k] = self.beta1 * self.v.get(k, 0)\
+                + (1. - self.beta1) * backward_caches[k]
+
+            self.s[k] = self.beta2 * self.s.get(k, 0) \
+                + (1. - self.beta2) * backward_caches[k]**2
+
+            params[k] -= lr_t * (self.v[k] / np.sqrt(self.s[k] + DELTA))
+
+    def reset(self) -> None:
+        self.v.clear()
+        self.s.clear()
+
+
+def get_gd(name: str,
+           lr: float,
+           beta1: float,
+           beta2: float) -> GD:
 
     name = name.lower()
     if name == 'sgd':
-        return gd_sgd
+        return SGD(lr)
     elif name == 'momentum':
-        return gd_momentum
+        return Momentum(lr, beta1)
     elif name == 'rmsprop':
-        return gd_rmsprop
+        return RMSprop(lr, beta1)
     elif name == 'adam':
-        return gd_adam
+        return Adam(lr, beta1, beta2)
     else:
         raise Exception('Non-supported optimization algorithm')
-
-
-def gd_sgd(backward_caches: Dict,
-           optimization_caches: Dict,
-           beta1: float,
-           beta2: float,
-           t: int) -> Dict:
-
-    return backward_caches
-
-
-def gd_momentum(backward_caches: Dict,
-                optimization_caches: Dict,
-                beta1: float,
-                beta2: float,
-                t: int) -> Dict:
-
-    layers_count = _get_layer_count(backward_caches)
-
-    d = {}
-    for layer_idx in range(1, layers_count + 1):
-        optimization_caches[f'vdw{layer_idx}'] = \
-            beta1 * optimization_caches.get(f'vdw{layer_idx}', 0) \
-            + (1 - beta1) * backward_caches[f'dw{layer_idx}']
-        optimization_caches[f'vdb{layer_idx}'] = \
-            beta1 * optimization_caches.get(f'vdb{layer_idx}', 0) \
-            + (1 - beta1) * backward_caches[f'db{layer_idx}']
-
-        d[f'dw{layer_idx}'] = optimization_caches[f'vdw{layer_idx}']
-        d[f'db{layer_idx}'] = optimization_caches[f'vdb{layer_idx}']
-
-    return d
-
-
-def gd_rmsprop(backward_caches: Dict,
-               optimization_caches: Dict,
-               beta1: float,
-               beta2: float,
-               t: int) -> Dict:
-
-    layers_count = _get_layer_count(backward_caches)
-
-    d = {}
-    for layer_idx in range(1, layers_count + 1):
-        optimization_caches[f'sdw{layer_idx}'] = \
-            beta2 * optimization_caches.get(f'sdw{layer_idx}', 0) \
-            + (1 - beta2) * backward_caches[f'dw{layer_idx}']**2
-        optimization_caches[f'sdb{layer_idx}'] = \
-            beta2 * optimization_caches.get(f'sdb{layer_idx}', 0) \
-            + (1 - beta2) * backward_caches[f'db{layer_idx}']**2
-
-        d[f'dw{layer_idx}'] = backward_caches[f'dw{layer_idx}'] \
-            / np.sqrt(optimization_caches[f'sdw{layer_idx}'] + DELTA)
-        d[f'db{layer_idx}'] = backward_caches[f'db{layer_idx}'] \
-            / np.sqrt(optimization_caches[f'sdb{layer_idx}'] + DELTA)
-
-    return d
-
-
-def gd_adam(backward_caches: Dict,
-            optimization_caches: Dict,
-            beta1: float,
-            beta2: float,
-            t: int) -> Dict:
-
-    layers_count = _get_layer_count(backward_caches)
-
-    gd_momentum(backward_caches, optimization_caches, beta1, beta2, t)
-    gd_rmsprop(backward_caches, optimization_caches, beta1, beta2, t)
-    _corret_gd(backward_caches, optimization_caches, beta1, beta2, t)
-
-    for layer_idx in range(1, layers_count + 1):
-        backward_caches[f'dw{layer_idx}'] = \
-            optimization_caches[f'vdw{layer_idx}'] \
-            / np.sqrt(optimization_caches[f'sdw{layer_idx}'] + DELTA)
-        backward_caches[f'db{layer_idx}'] = \
-            optimization_caches[f'vdb{layer_idx}'] \
-            / np.sqrt(optimization_caches[f'sdb{layer_idx}'] + DELTA)
-
-    return backward_caches
-
-
-def _corret_gd(backward_caches: Dict,
-               optimization_caches: Dict,
-               beta1: float,
-               beta2: float,
-               t: int) -> None:
-    """Adam 中需要修正 Momentum 和 RMSprop，
-    单独使用 Momentum 或 RMSprop 则不需要。"""
-
-    t = t % 170  # 防 beta**t 溢出，实际已经够接近 0 了
-    layers_count = _get_layer_count(backward_caches)
-
-    for layer_idx in range(1, layers_count + 1):
-        optimization_caches[f'vdw{layer_idx}'] = \
-            optimization_caches[f'vdw{layer_idx}'] / (1 - beta1**t)
-        optimization_caches[f'vdb{layer_idx}'] = \
-            optimization_caches[f'vdb{layer_idx}'] / (1 - beta1**t)
-        optimization_caches[f'sdw{layer_idx}'] = \
-            optimization_caches[f'sdw{layer_idx}'] / (1 - beta2**t)
-        optimization_caches[f'sdb{layer_idx}'] = \
-            optimization_caches[f'sdb{layer_idx}'] / (1 - beta2**t)
-
-
-def _get_layer_count(backward_caches: Dict) -> int:
-    return len(backward_caches) // 2

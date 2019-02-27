@@ -28,8 +28,8 @@ def main() -> None:
         x_train, y_train, 1000,
         new_train=True,
         batch_size=100,
-        learning_rate=0.1,
-        gd_func_name='sgd'
+        lr=0.1,
+        gd_name='sgd'
     )
 
 

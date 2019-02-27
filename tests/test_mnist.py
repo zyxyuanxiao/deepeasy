@@ -18,8 +18,8 @@ def main() -> None:
         x_train, y_train, 100,
         new_train=True,
         batch_size=600,
-        learning_rate=0.01,
-        gd_func_name='sgd'
+        lr=0.01,
+        gd_name='sgd'
     )
 
     print(nn.test_model(x_test, y_test))
