@@ -43,8 +43,8 @@ class Momentum(GD):
 
         for k in params:
             self.v[k] = self.beta * self.v.get(k, 0)\
-                        + (1. - self.beta) * backward_caches[k]
-            params[k] -= self.lr * self.v[k]
+                        + self.lr * backward_caches[k]
+            params[k] -= self.v[k]
 
     def reset(self) -> None:
         self.v.clear()

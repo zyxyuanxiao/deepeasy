@@ -4,9 +4,7 @@
 
 ## 已实现
 
-- 任意结构神经网络，及指定每层的激活函数
-- 神经网络参数重置
-- 记录每一轮训练的 cost 等
+- 初始任意结构神经网络
 - Xavier Initializer
 - mini batch
 - 正向传播
@@ -15,14 +13,14 @@
 - Momentum
 - RMSprop
 - Adam
-- inverted dropout，及每层不同的 dropout keep_prob
+- inverted dropout，每层可以不同的 dropout keep_prob
 - Cross Entropy Cost
 - Mean Squared Cost
 
 ## TODO
 
-- Batch Normalization
 - 代码优化
+- Batch Normalization
 - L2 正则化
 
 ## 安装
