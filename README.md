@@ -90,7 +90,7 @@ nn.train(x_train, y_train,
     epochs=100,
     batch_size=600,
     learning_rate=0.01,
-    gd_algorithm_name='sgd'
+    gd_func_name='sgd'
 )
 ```
 

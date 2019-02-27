@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 def plot_nn_history(neural_network) -> None:
 
-    fig = plt.figure(figsize=(12, 3), dpi=120)
+    fig = plt.figure(figsize=(10, 3), dpi=120)
     subplot_kw = {
         'xlabel': 'Epochs',
     }
@@ -38,7 +38,7 @@ def plot_nn_history(neural_network) -> None:
         ax2.set_yticks(np.linspace(0, 1, 11))
         ax2.grid(True)
 
-    ax1.legend(loc='upper left', shadow=True)
-    ax2.legend(loc='upper left', shadow=True)
+    ax1.legend(loc='upper right', shadow=True)
+    ax2.legend(loc='lower right', shadow=True)
 
     plt.show()

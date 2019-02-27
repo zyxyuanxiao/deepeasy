@@ -10,7 +10,7 @@ from .types import *
 from .env import *
 
 
-def get_gd_algorithm(name: str) -> Callable:
+def get_gd_func(name: str) -> Callable:
 
     name = name.lower()
     if name == 'sgd':

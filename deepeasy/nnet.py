@@ -10,8 +10,8 @@ import time
 import numpy as np
 
 from .activations import get_activation_func
-from .optimizations import get_gd_algorithm
-from .costs import cost_cross_entropy
+from .optimizations import get_gd_func
+from .costs import get_cost_func
 from .plot import plot_nn_history
 from .types import *
 from .env import *
@@ -76,12 +76,12 @@ class NeuralNetwork:
               batch_size: int = 0,
               learning_rate: float = 0.01,
               batch_normalization: bool = True,
-              gd_algorithm_name: str = 'normal',
+              gd_func_name: str = 'normal',
               momentum_beta: float = 0.9,
               rmsprop_beta: float = 0.999,
               l2_lambda: Optional[float] = None,
               dropout: bool = False,
-              cost_func: Callable = cost_cross_entropy) -> None:
+              cost_func_name: str = 'cross_entropy') -> None:
         """
         :param x_train:
         :param y_train:
@@ -90,12 +90,12 @@ class NeuralNetwork:
         :param batch_size:
         :param learning_rate:
         :param batch_normalization:
-        :param gd_algorithm_name: 梯度下降的算法
+        :param gd_func_name: 梯度下降的算法
         :param momentum_beta:
         :param rmsprop_beta:
         :param l2_lambda:
         :param dropout:
-        :param cost_func:
+        :param cost_func_name:
 
         维度：
 
@@ -112,7 +112,8 @@ class NeuralNetwork:
         if batch_normalization:
             self.batch_normalization = True
 
-        gd_func = get_gd_algorithm(gd_algorithm_name)
+        gd_func = get_gd_func(gd_func_name)
+        cost_func = get_cost_func(cost_func_name)
 
         print(f'开始训练，迭代次数：{epochs}')
 
@@ -269,7 +270,7 @@ class NeuralNetwork:
             yield x_batch, y_batch
 
             if end_flag:
-                break
+                return
 
     def forward_propration(self,
                            x: ndarray,

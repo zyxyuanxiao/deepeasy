@@ -13,6 +13,6 @@ setup(
     author_email='zzzzer91@gmail.com',
     url='https://github.com/zzzzer91/deepeasy',
     packages=['deepeasy'],
-    install_requires=load_requirements('./requirements.text'),
+    install_requires=load_requirements('./requirements.txt'),
     zip_safe=False,
 )

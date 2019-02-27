@@ -1,10 +1,10 @@
 import deepeasy.nnet as nnet
-from deepeasy.datasets import minst
+from deepeasy.datasets.minst import load_minst
 
 
 def main() -> None:
     file_path = '/home/zzzzer/Documents/data/数据集/数字手写体/mnist/'
-    x_train, y_train, x_test, y_test = minst.load_minst(file_path)
+    x_train, y_train, x_test, y_test = load_minst(file_path)
 
     # 神经网络结构
     nn_architecture = [
@@ -19,7 +19,7 @@ def main() -> None:
         new_train=True,
         batch_size=600,
         learning_rate=0.01,
-        gd_algorithm_name='sgd'
+        gd_func_name='sgd'
     )
 
     print(nn.test_model(x_test, y_test))

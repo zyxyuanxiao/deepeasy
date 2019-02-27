@@ -29,7 +29,7 @@ def main() -> None:
         new_train=True,
         batch_size=100,
         learning_rate=0.1,
-        gd_algorithm_name='sgd'
+        gd_func_name='sgd'
     )
 
 
