@@ -100,14 +100,14 @@ class NeuralNetwork:
         y.shape = (样本数, 每个样本 feature 数)
         """
 
+        gd = get_gd(gd_name, lr, momentum_beta, rmsprop_beta)
+        cost_func = get_cost_func(cost_func_name)
+
         if new_train:
             self.reset_params(keep_history=True)
 
         # 正则化输入
         self.batch_normalization = batch_normalization
-
-        gd = get_gd(gd_name, lr, momentum_beta, rmsprop_beta)
-        cost_func = get_cost_func(cost_func_name)
 
         print(f'开始训练，迭代次数：{epochs}')
 
