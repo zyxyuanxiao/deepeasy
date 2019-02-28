@@ -1,38 +1,10 @@
-# DeepEasy
+# DeepEasy: birth for research and fun
 
-纯 Numpy 实现各种基本的深度学习算法。
+![logo](./imgs/logo.png)
 
-## 已实现
+## Getting started
 
-- Xavier Initializer
-- mini batch
-- Forward propagation
-- Back propagation
-- SGD
-- Momentum
-- RMSprop
-- Adam
-- Nadam
-- inverted dropout
-- Cross Entropy Cost
-- Mean Squared Cost
-
-## TODO
-
-- 代码优化
-- Batch Normalization
-- L2 Regularization
-
-## 安装
-
-```python
-python3 setup.py install
-```
-
-
-## 使用方法
-
-### 基础
+### Basic
 
 定义神经网络结构：
 
@@ -63,12 +35,12 @@ nn_architecture = [
 nn = NeuralNetwork(nn_architecture, seed=100)
 ```
 
-载入 Minst 数据集（需要提前下好，解压，放入同一个文件夹，文件名不能改动）：
+载入 Minst 数据集（需要提前下好，解压，放入同一个文件夹）：
 
 ```python
 from deepeasy.datasets import load_minst
 
-file_path = '/home/zzzzer/Documents/data/数据集/数字手写体/mnist/'
+file_path = '/home/zzzzer/Documents/data/数据集/mnist/'
 x_train, y_train, x_test, y_test = minst.load_minst(file_path)
 # x_train.shape=(60000, 28, 28), y_train.shape=(60000,)
 # x_test.shape=(10000, 28, 28), y_test.shape=(10000,)
@@ -88,21 +60,93 @@ y_test[img_idx]
 
 开始训练：
 ```python
-nn.train(x_train, y_train,
-    epochs=100,
-    batch_size=600,
-    lr=0.01,
-    gd_name='sgd'
+nn.train(
+    x_train, y_train, 100,
+    batch_size=600, 
+    batch_normalization=True,
+    lr=0.002,
+    gd_name='adam'
 )
 ```
 
+```python
+开始训练，迭代次数：100
+100
+完成！用时：83.32364273071289s
+```
+
 画出 Cost、Accuracy 走势：
+
 ```python
 nn.plot_history()
 ```
 
+![img](./imgs/01.png)
+
 测试模型：
+
 ```python
 nn.test_model(x_test, y_test)
 ```
 
+```python
+0.9739
+```
+
+### Advance
+
+继续执行 `nn.train()` 方法，在现有模型上继续训练：
+
+```python
+nn.train(
+    x_train, y_train, 100,
+    batch_size=600, 
+    batch_normalization=True,
+    lr=0.002,
+    gd_name='nadam'
+)
+```
+
+`new_train=True` 清除前面的模型，开启新一轮训练，图像会在原有基础上画出：
+
+```python
+nn.train(
+    x_train, y_train, 100,
+    new_train=True,
+    batch_size=600, 
+    batch_normalization=True,
+    lr=0.002,
+    gd_name='sgd'
+)
+nn.plot_history()
+```
+
+![img](./imgs/02.png)
+
+`nn.reset_params()` 清空所有训练记录，回到初始状态，但保留神经网络结构。
+
+## Installation
+
+```python
+python3 setup.py install
+```
+
+## Include
+
+- Xavier Initializer
+- mini batch
+- Forward propagation
+- Back propagation
+- SGD
+- Momentum
+- RMSprop
+- Adam
+- Nadam
+- inverted dropout
+- Cross Entropy Cost
+- Mean Squared Cost
+
+## Todo list
+
+- Batch Normalization
+- L2 Regularization

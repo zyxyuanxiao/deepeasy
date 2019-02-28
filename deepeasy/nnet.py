@@ -72,8 +72,8 @@ class NeuralNetwork:
               lr: float = 0.01,
               batch_normalization: bool = True,
               gd_name: str = 'sgd',
-              momentum_beta: float = 0.9,
-              rmsprop_beta: float = 0.999,
+              beta1: float = 0.9,
+              beta2: float = 0.999,
               l2_lambda: Optional[float] = None,
               dropout: bool = False,
               cost_func_name: str = 'cross_entropy') -> None:
@@ -86,8 +86,8 @@ class NeuralNetwork:
         :param lr: 学习率
         :param batch_normalization:
         :param gd_name: 梯度下降的算法
-        :param momentum_beta:
-        :param rmsprop_beta:
+        :param beta1:
+        :param beta2:
         :param l2_lambda:
         :param dropout:
         :param cost_func_name:
@@ -100,7 +100,7 @@ class NeuralNetwork:
         y.shape = (样本数, 每个样本 feature 数)
         """
 
-        gd = get_gd(gd_name, lr, momentum_beta, rmsprop_beta)
+        gd = get_gd(gd_name, lr, beta1, beta2)
         cost_func = get_cost_func(cost_func_name)
 
         if new_train:
