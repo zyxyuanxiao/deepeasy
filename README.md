@@ -51,9 +51,11 @@ nn_architecture: List[Dict] = [
 ]
 ```
 
-new 对象，指定随机数种子 seed，保证每次随机初始化 weight 的值都相同，便于测试：
+实例化对象，指定随机数种子 seed，保证每次随机初始化 weight 的值都相同，便于测试：
 
 ```python
+from deepeasy.nnet import NeuralNetwork
+
 nn_architecture = [
     {"input_dim": 2, "output_dim": 50, "activation": "relu"},
     {"input_dim": 50, "output_dim": 1, "activation": "sigmoid"},
@@ -64,6 +66,8 @@ nn = NeuralNetwork(nn_architecture, seed=100)
 载入 Minst 数据集（需要提前下好，解压，放入同一个文件夹，文件名不能改动）：
 
 ```python
+from deepeasy.datasets import load_minst
+
 file_path = '/home/zzzzer/Documents/data/数据集/数字手写体/mnist/'
 x_train, y_train, x_test, y_test = minst.load_minst(file_path)
 # x_train.shape=(60000, 28, 28), y_train.shape=(60000,)

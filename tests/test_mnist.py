@@ -1,5 +1,5 @@
 import deepeasy.nnet as nnet
-from deepeasy.datasets.minst import load_minst
+from deepeasy.datasets import load_minst
 
 
 def main() -> None:
