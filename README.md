@@ -4,15 +4,15 @@
 
 ## 已实现
 
-- 初始任意结构神经网络
 - Xavier Initializer
 - mini batch
-- 正向传播
-- 反向传播
+- Forward propagation
+- Back propagation
 - SGD
 - Momentum
 - RMSprop
 - Adam
+- Nadam
 - inverted dropout
 - Cross Entropy Cost
 - Mean Squared Cost
@@ -21,7 +21,7 @@
 
 - 代码优化
 - Batch Normalization
-- L2 正则化
+- L2 Regularization
 
 ## 安装
 

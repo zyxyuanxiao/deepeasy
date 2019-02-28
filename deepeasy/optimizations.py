@@ -14,7 +14,10 @@ class GD:
     def __init__(self, lr=0.01) -> None:
         self.lr: float = lr
 
-    def update(self, params, backward_caches) -> None:
+    def update(self,
+               params: Dict[str, ndarray],
+               backward_caches: Dict[str, ndarray]) -> None:
+
         raise NotImplementedError
 
     def reset(self) -> None:
@@ -26,7 +29,10 @@ class SGD(GD):
     def __init__(self, lr=0.01) -> None:
         super().__init__(lr)
 
-    def update(self, params, backward_caches) -> None:
+    def update(self,
+               params: Dict[str, ndarray],
+               backward_caches: Dict[str, ndarray]) -> None:
+
         for key in params:
             params[key] -= self.lr * backward_caches[key]
 
@@ -38,7 +44,9 @@ class Momentum(GD):
         self.beta = beta
         self.v = {}
 
-    def update(self, params, backward_caches) -> None:
+    def update(self,
+               params: Dict[str, ndarray],
+               backward_caches: Dict[str, ndarray]) -> None:
 
         for k in params:
             self.v[k] = self.beta * self.v.get(k, 0.)\
@@ -56,7 +64,9 @@ class RMSprop(GD):
         self.beta = beta
         self.s = {}
 
-    def update(self, params, backward_caches) -> None:
+    def update(self,
+               params: Dict[str, ndarray],
+               backward_caches: Dict[str, ndarray]) -> None:
 
         for k in params:
             self.s[k] = self.beta * self.s.get(k, 0.)\
@@ -77,7 +87,9 @@ class Adam(GD):
         self.s = {}
         self.iter = 0
 
-    def update(self, params, backward_caches) -> None:
+    def update(self,
+               params: Dict[str, ndarray],
+               backward_caches: Dict[str, ndarray]) -> None:
 
         self.iter += 1
         self.iter %= 170
@@ -104,7 +116,9 @@ class Nadam(Adam):
     def __init__(self, lr=0.002, beta1=0.9, beta2=0.999) -> None:
         super().__init__(lr, beta1, beta2)
 
-    def update(self, params, backward_caches) -> None:
+    def update(self,
+               params: Dict[str, ndarray],
+               backward_caches: Dict[str, ndarray]) -> None:
 
         self.iter += 1
         self.iter %= 170
