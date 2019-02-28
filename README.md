@@ -2,6 +2,8 @@
 
 ![logo](./imgs/logo.png)
 
+「这里的神经元似乎充斥着一股神秘力量。」
+
 ## Getting started
 
 ### Basic
