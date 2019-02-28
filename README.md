@@ -13,7 +13,7 @@
 - Momentum
 - RMSprop
 - Adam
-- inverted dropout，每层可以不同的 dropout keep_prob
+- inverted dropout
 - Cross Entropy Cost
 - Mean Squared Cost
 
