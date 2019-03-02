@@ -2,6 +2,8 @@
 
 ![logo](./imgs/logo.png)
 
+DeepEasy，一个基于 Numpy 的深度娱乐框架。
+
 「这里的神经元似乎充斥着一股神秘力量。」
 
 ## Getting started
@@ -31,8 +33,8 @@ nn_architecture: List[Dict] = [
 from deepeasy.nnet import NeuralNetwork
 
 nn_architecture = [
-    {"input_dim": 2, "output_dim": 50, "activation": "relu"},
-    {"input_dim": 50, "output_dim": 1, "activation": "sigmoid"},
+    {"input_dim": 28*28, "output_dim": 64, "activation": "relu"},
+    {"input_dim": 64, "output_dim": 10, "activation": "softmax"},
 ]
 nn = NeuralNetwork(nn_architecture, seed=100)
 ```
