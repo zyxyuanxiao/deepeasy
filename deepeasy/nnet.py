@@ -199,11 +199,12 @@ class NeuralNetwork:
 
             self.layers.append(layer)
 
-    def normalize(self, x: ndarray) -> ndarray:
+    @staticmethod
+    def normalize(x: ndarray) -> ndarray:
         """归一化。"""
 
         # TODO
-        pass
+        return x
 
     @staticmethod
     def whitening(z: ndarray) -> Tuple[ndarray, float, float]:
