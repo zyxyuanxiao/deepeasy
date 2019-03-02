@@ -2,7 +2,7 @@ import numpy as np
 from ..types import *
 
 
-def load_minst(path: str) -> Tuple[ndarray, ndarray, ndarray, ndarray]:
+def load_mnist(path: str) -> Tuple[ndarray, ndarray, ndarray, ndarray]:
     """
     :param path: mnist 数据所在文件夹路径
     """

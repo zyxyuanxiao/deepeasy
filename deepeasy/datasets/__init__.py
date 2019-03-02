@@ -1,1 +1,1 @@
-from .minst import load_minst
+from .mnist import load_mnist

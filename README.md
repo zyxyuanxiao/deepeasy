@@ -37,13 +37,13 @@ nn_architecture = [
 nn = NeuralNetwork(nn_architecture, seed=100)
 ```
 
-载入 Minst 数据集（需要提前下好，解压，放入同一个文件夹）：
+载入 Mnist 数据集（需要提前下好，解压，放入同一个文件夹）：
 
 ```python
-from deepeasy.datasets import load_minst
+from deepeasy.datasets import load_mnist
 
 file_path = '/home/zzzzer/Documents/data/数据集/mnist/'
-x_train, y_train, x_test, y_test = minst.load_minst(file_path)
+x_train, y_train, x_test, y_test = load_mnist(file_path)
 # x_train.shape=(60000, 28, 28), y_train.shape=(60000,)
 # x_test.shape=(10000, 28, 28), y_test.shape=(10000,)
 ```
@@ -66,7 +66,7 @@ nn.train(
     x_train, y_train, 100,
     batch_size=600, 
     batch_normalization=True,
-    lr=0.002,
+    lr=0.001,
     gd_name='adam'
 )
 ```
@@ -152,3 +152,12 @@ python3 setup.py install
 
 - Batch Normalization
 - L2 Regularization
+
+## References
+
+吴恩达. [深度学习工程师](https://mooc.study.163.com/smartSpec/detail/1001319001.htm). 网易云.
+
+SkalskiP. [ILearnDeepLearning.py](https://github.com/SkalskiP/ILearnDeepLearning.py). GitHub.
+
+斋藤康毅.《深度学习入门：基于Python的理论与实现》. 人民邮电出版社.
+

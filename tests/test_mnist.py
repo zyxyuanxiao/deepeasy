@@ -1,10 +1,10 @@
 import deepeasy.nnet as nnet
-from deepeasy.datasets import load_minst
+from deepeasy.datasets import load_mnist
 
 
 def main() -> None:
     file_path = '/home/zzzzer/Documents/data/数据集/数字手写体/mnist/'
-    x_train, y_train, x_test, y_test = load_minst(file_path)
+    x_train, y_train, x_test, y_test = load_mnist(file_path)
 
     # 神经网络结构
     nn_architecture = [
