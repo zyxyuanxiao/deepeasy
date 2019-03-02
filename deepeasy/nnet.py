@@ -9,8 +9,8 @@ import time
 
 import numpy as np
 
-from .activations import get_activation_func
-from .optimizations import get_gd
+from .layers import Layer
+from .optimizers import get_gd
 from .costs import get_cost_func
 from .plot import plot_nn_history
 from .types import *
@@ -43,24 +43,17 @@ class NeuralNetwork:
         :param seed: 初始化权重矩阵的随机数种子。
         """
 
-        self.nn_architecture: List[Dict] = nn_architecture
         self.layers_count: int = len(nn_architecture)
+        self.layers: List[Layer] = []
+
         self.seed: Optional[int] = seed
 
-        # 当训练时指定了归一化输入，此变量会被设为 True
-        # 用于测试模型和预测时
         self.batch_normalization: bool = True
-
-        # dropout 每层神经元保留概率
-        self.dropout_keep_probs: Dict[str, float] = {}
 
         self.train_count: int = 0  # 记录训练次数
         self.history: Dict[str, List[float]] = {}  # cost 记录等
 
-        self.params: Dict[str, ndarray] = {}  # 存放参数
-        self.activation_funcs: Dict[str, Callable] = {}  # 存放激活函数，和其求导
-
-        self.init_layers(seed)
+        self.init_layers(nn_architecture, seed)
 
     def train(self,
               x_train: ndarray,
@@ -106,7 +99,6 @@ class NeuralNetwork:
         if new_train:
             self.reset_params(keep_history=True)
 
-        # 正则化输入
         self.batch_normalization = batch_normalization
 
         print(f'开始训练，迭代次数：{epochs}')
@@ -124,23 +116,18 @@ class NeuralNetwork:
 
                 t += 1
 
-                if batch_normalization:
-                    x_batch = self.normalize_batch(x_batch)
-
                 # 正向传播
-                a, forward_caches = self.forward_propration(x_batch, dropout)
+                a = self.forward_propration(x_batch)
 
                 # 计算误差，精度
                 cost += cost_func(a, y_batch)
                 accuracy += self.get_accuracy(a, y_batch)
 
                 # 反向传播
-                backward_caches = self.backward_propration(
-                    a, y_batch, forward_caches
-                )
+                self.backward_propration(y_batch)
 
                 # 更新 w，b
-                gd.update(self.params, backward_caches)
+                gd.update(self.layers)
 
             self._add_to_history(cost=cost/t, accuracy=accuracy/t)
 
@@ -150,19 +137,17 @@ class NeuralNetwork:
         end = time.time()
         print(f'\n完成！用时：{end - start}s')
 
-    def test_model(self,
-                   x: ndarray,
-                   y: ndarray) -> float:
+    def test_model(self, x: ndarray, y: ndarray) -> float:
 
         if self.batch_normalization:
-            x = self.normalize_batch(x)
+            x = self.normalize(x)
         a = self.predict(x)
         return self.get_accuracy(a, y)
 
     def predict(self, x: ndarray) -> ndarray:
 
         x = np.atleast_2d(x)
-        return self.forward_propration(x)[0]
+        return self.forward_propration(x)
 
     def reset_params(self,
                      keep_history: bool = False,
@@ -187,40 +172,46 @@ class NeuralNetwork:
         if self.history:  # 判断是否已有训练数据，否则不能加 1
             self.train_count += 1
 
-        # 清空原来的参数
-        self.params.clear()
         self.batch_normalization = True
 
-        for layer_idx, layer in enumerate(self.nn_architecture, 1):
-            self._init_per_layer_params(layer_idx, layer)
+        for layer in self.layers:
+            layer.init_params()
 
-    def init_layers(self, seed: Optional[int] = None) -> None:
+    def init_layers(self,
+                    nn_architecture: List[Dict],
+                    seed: Optional[int] = None) -> None:
 
         # 随机数种子
         np.random.seed(seed)
 
-        for layer_idx, layer in enumerate(self.nn_architecture, 1):
-            self._init_per_layer_params(layer_idx, layer)
+        for layer_arch in nn_architecture:
+            input_dim = layer_arch['input_dim']
+            output_dim = layer_arch['output_dim']
+            activation = layer_arch.get('activation')  # 可能为 None
+            dropout_keep_prob = layer_arch.get('dropout_keep_prob', 1.)
 
-            g, g_backward = get_activation_func(layer.get('activation'))
-            self.activation_funcs[f'g{layer_idx}'] = g
-            self.activation_funcs[f'g_prime{layer_idx}'] = g_backward
+            layer = Layer(
+                input_dim,
+                output_dim,
+                activation,
+                dropout_keep_prob
+            )
 
-            # 初始化每层的 dropout 的 keep prob
-            kp = layer.get('dropout_keep_prob')
-            self.dropout_keep_probs[f'kp{layer_idx}'] = kp if kp else 1.
+            self.layers.append(layer)
 
-    def normalize_batch(self, x: ndarray) -> ndarray:
+    def normalize(self, x: ndarray) -> ndarray:
         """归一化。"""
 
-        # samples_num = x.shape[SMAPLES_NUM_AXIS]
-        # mu = np.sum(x, SMAPLES_NUM_AXIS, keepdims=True) / samples_num
-        # self.normalize_params['mu'] = mu
-        # x = x - mu
-        # sigma_square = np.sum(x**2, SMAPLES_NUM_AXIS, keepdims=True) / samples_num
-        # self.normalize_params['sigma_square'] = sigma_square
-        # return x / np.sqrt(sigma_square+DELTA)
-        return x / 255.
+        # TODO
+        pass
+
+    @staticmethod
+    def whitening(z: ndarray) -> Tuple[ndarray, float, float]:
+        samples_num = z.shape[LABELS_NUM_AXIS]
+        mu = np.sum(z, LABELS_NUM_AXIS, keepdims=True) / samples_num
+        x = z - mu
+        sigma_square = np.sum(x**2, LABELS_NUM_AXIS, keepdims=True) / samples_num
+        return x / np.sqrt(sigma_square + EPSILON), mu, sigma_square
 
     @staticmethod
     def mini_batch(x_train: ndarray,
@@ -251,64 +242,16 @@ class NeuralNetwork:
             if end_flag:
                 return
 
-    def forward_propration(self,
-                           x: ndarray,
-                           dropout: bool = False) -> Tuple[ndarray, Dict]:
-
+    def forward_propration(self, x: ndarray) -> ndarray:
         a = x
-        forward_caches = {'a0': a}
+        for layer in self.layers:
+            a = layer.forward(a)
+        return a
 
-        for layer_idx in range(1, self.layers_count + 1):
-            w = self.params[f'w{layer_idx}']
-            b = self.params[f'b{layer_idx}']
-            activation_func = self.activation_funcs[f'g{layer_idx}']
-
-            z = a @ w + b
-            a = activation_func(z)  # shape = (该层神经元数, 样本数)
-
-            # dropout
-            if dropout:
-                kp = self.dropout_keep_probs[f'kp{layer_idx}']
-                if kp < 1.:
-                    a = self.inverted_dropout(a, kp)
-
-            forward_caches[f'z{layer_idx}'] = z
-            forward_caches[f'a{layer_idx}'] = a
-
-        return a, forward_caches
-
-    def backward_propration(self,
-                            a: ndarray,
-                            y: ndarray,
-                            forward_caches: Dict) -> Dict:
-
-        backward_caches = {}
-
-        batch_size = a.shape[LABELS_NUM_AXIS]
-
-        # da = -(y / a) + (1 - y) / (1 - a)
+    def backward_propration(self, y: ndarray) -> None:
         da: Optional[ndarray] = None
-
-        for layer_idx in range(self.layers_count, 0, -1):
-            activation_func_prime = self.activation_funcs[f'g_prime{layer_idx}']
-            z = forward_caches[f'z{layer_idx}']
-            a_pre = forward_caches[f'a{layer_idx - 1}']
-            w = self.params[f'w{layer_idx}']
-            if layer_idx == self.layers_count:
-                dz = (a - y) / batch_size
-            else:
-                dz = da * activation_func_prime(z)
-
-            dw = (a_pre.T @ dz)
-
-            db = np.sum(dz, axis=LABELS_NUM_AXIS, keepdims=True)
-
-            backward_caches[f'w{layer_idx}'] = dw
-            backward_caches[f'b{layer_idx}'] = db
-
-            da = dz @ w.T
-
-        return backward_caches
+        for layer in reversed(self.layers):
+            da = layer.backward(da, y)
 
     # def l2_regularization(self, l2_lambda: float) -> float:
     #     all_w_sum = 0
@@ -317,18 +260,9 @@ class NeuralNetwork:
     #     return l2_lambda / 2 * all_w_sum
 
     @staticmethod
-    def inverted_dropout(a: ndarray,
-                         keep_prob: float,
-                         seed: Optional[int] = None) -> ndarray:
-
-        np.random.seed(seed)
-        d = np.random.rand(*a.shape) < keep_prob
-        return a * d / keep_prob
-
-    @staticmethod
     def get_accuracy(a: ndarray, y: ndarray) -> float:
-        feature_num = a.shape[LABEL_FEATURES_NUM_AXIS]
-        batch_size = a.shape[LABELS_NUM_AXIS]
+        feature_num = y.shape[LABEL_FEATURES_NUM_AXIS]
+        batch_size = y.shape[LABELS_NUM_AXIS]
 
         if feature_num == 1:
             a = np.where(a > 0.5, 1, 0)
@@ -339,30 +273,8 @@ class NeuralNetwork:
                 == y.argmax(axis=LABEL_FEATURES_NUM_AXIS)
             ) / batch_size
 
-    def plot_history(self):
+    def plot_history(self) -> None:
         plot_nn_history(self)
-
-    def _init_per_layer_params(self, layer_idx: int, layer: Dict) -> None:
-        """初始化权重和偏差。"""
-
-        layer_input_size = layer['input_dim']
-        layer_output_size = layer['output_dim']
-        act = layer.get('activation')  # 可能为 None
-
-        # Xavier Initializer
-        # 除以每个神经元被连接数的平方根
-        # 如果用 ReLU，除以每个神经元被连接数的平方根乘 2，会更好
-        n = layer_input_size
-        if act and act.lower() == 'relu':
-            n /= 2
-        self.params[f'w{layer_idx}'] = np.random.randn(
-            layer_input_size, layer_output_size
-        ) / np.sqrt(n)
-
-        # b 全初始化为 0
-        self.params[f'b{layer_idx}'] = np.zeros(
-            shape=(1, layer_output_size)
-        )
 
     def _add_to_history(self, **kwargs: float) -> None:
         for k, v in kwargs.items():

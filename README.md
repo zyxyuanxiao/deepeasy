@@ -64,8 +64,7 @@ y_test[img_idx]
 ```python
 nn.train(
     x_train, y_train, 100,
-    batch_size=600, 
-    batch_normalization=True,
+    batch_size=600,
     lr=0.001,
     gd_name='adam'
 )
@@ -102,8 +101,7 @@ nn.test_model(x_test, y_test)
 ```python
 nn.train(
     x_train, y_train, 100,
-    batch_size=600, 
-    batch_normalization=True,
+    batch_size=600,
     lr=0.002,
     gd_name='nadam'
 )
@@ -115,8 +113,7 @@ nn.train(
 nn.train(
     x_train, y_train, 100,
     new_train=True,
-    batch_size=600, 
-    batch_normalization=True,
+    batch_size=600,
     lr=0.002,
     gd_name='sgd'
 )
@@ -152,6 +149,7 @@ python3 setup.py install
 
 - Batch Normalization
 - L2 Regularization
+- Tests
 
 ## References
 

@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 import deepeasy.nnet as nnet
 
 N_SAMPLES = 1000
-NOISE = 0.22
+NOISE = 0.25
 SEED = 100
 
 # ratio between training and test sets
@@ -27,10 +27,13 @@ def main() -> None:
     nn.train(
         x_train, y_train, 1000,
         new_train=True,
+        batch_normalization=True,
         batch_size=100,
-        lr=0.1,
-        gd_name='sgd'
+        lr=0.001,
+        gd_name='adam'
     )
+    print(nn.test_model(x_test, y_test))
+    # nn.plot_history()
 
 
 if __name__ == '__main__':
