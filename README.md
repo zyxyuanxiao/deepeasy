@@ -44,10 +44,10 @@ nn = NeuralNetwork(nn_architecture, batch_normalization=False, seed=100)
 ```python
 from deepeasy.datasets import load_mnist
 
-file_path = '/home/zzzzer/Documents/data/数据集/mnist/'
+file_path = '/home/zzzzer/Documents/data/数据集/数字手写体/mnist/'
 x_train, y_train, x_test, y_test = load_mnist(file_path)
-# x_train.shape=(60000, 28, 28), y_train.shape=(60000,)
-# x_test.shape=(10000, 28, 28), y_test.shape=(10000,)
+# x_train.shape=(60000, 784), y_train.shape=(60000, 10)
+# x_test.shape=(10000, 784), y_test.shape=(10000, 10)
 ```
 
 查看某一张图片，及其标签：
@@ -94,8 +94,8 @@ nn.test_model(x_test, y_test)
 nn.train(
     x_train, y_train, 100,
     batch_size=600,
-    lr=0.002,
-    gd_name='nadam'
+    lr=0.001,
+    gd_name='adam'
 )
 ```
 
