@@ -21,8 +21,8 @@ def main() -> None:
     logger.info(f'x_test.shape={x_test.shape}, y_test.shape={y_test.shape}')
 
     nn_architecture = [
-        {"input_dim": 2, "output_dim": 50, "activation": "relu"},
-        {"input_dim": 50, "output_dim": 1, "activation": "sigmoid"},
+        {'input_dim': 2, 'output_dim': 16, 'activation': 'relu'},
+        {'input_dim': 16, 'output_dim': 1, 'activation': 'sigmoid'},
     ]
     nn = nnet.NeuralNetwork(nn_architecture, batch_normalization=False, seed=100)
     nn.train(

@@ -33,8 +33,8 @@ nn_architecture: List[Dict] = [
 from deepeasy.nnet import NeuralNetwork
 
 nn_architecture = [
-    {"input_dim": 28*28, "output_dim": 64, "activation": "relu"},
-    {"input_dim": 64, "output_dim": 10, "activation": "softmax"},
+    {'input_dim': 28 * 28, 'output_dim': 64, 'activation': 'relu'},
+    {'input_dim': 64, 'output_dim': 10, 'activation': 'softmax'},
 ]
 nn = NeuralNetwork(nn_architecture, batch_normalization=False, seed=100)
 ```
@@ -106,7 +106,7 @@ nn.train(
     x_train, y_train, 100,
     new_train=True,
     batch_size=600,
-    lr=0.002,
+    lr=0.016,
     gd_name='sgd'
 )
 nn.plot_history()
