@@ -31,7 +31,7 @@ class Layer:
 
         self.init_params()
 
-        self.g, self.g_backward = get_activation_func(activation)
+        self.g, self.g_prime = get_activation_func(activation)
 
         # 缓存
         self.forward_caches: Dict[str, ndarray] = {}
@@ -42,7 +42,9 @@ class Layer:
         z = a_pre @ self.params['w']
         if self.batch_normalization and not self.is_output_layer:
             z_white, mu, sigma = whitening(z)
-            z = z_white @ self.params['gamma'] + self.params['beta']
+            self.forward_caches['z_tilde'] = z_white
+            z_tilde = z_white @ self.params['gamma'] + self.params['beta']
+            self.forward_caches['z_tilde'] = z_tilde
         else:
             z += self.params['b']
 
@@ -62,7 +64,17 @@ class Layer:
         if self.is_output_layer:
             dz = (self.forward_caches['a'] - y) / y.shape[LABELS_NUM_AXIS]
         else:
-            dz = da * self.g_backward(self.forward_caches['z'])
+            if self.batch_normalization:
+                dz_tilde = da * self.g_prime(self.forward_caches['z_tilde'])
+                dgamma = self.forward_caches['z_white'].T @ dz_tilde
+                self.backward_caches['dgamma'] = dgamma
+                dbeta = np.sum(dz_tilde, axis=LABELS_NUM_AXIS, keepdims=True)
+                self.backward_caches['dbeta'] = dbeta
+                dz_white = dz_tilde @ self.params['gamma'].T
+                # TODO
+                dz = 1
+            else:
+                dz = da * self.g_prime(self.forward_caches['z'])
 
         dw = self.forward_caches['a_pre'].T @ dz
 

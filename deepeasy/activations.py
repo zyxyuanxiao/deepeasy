@@ -14,7 +14,7 @@ def relu(z: ndarray) -> ndarray:
     return np.maximum(z, 0)
 
 
-def relu_backward(z: ndarray) -> ndarray:
+def relu_prime(z: ndarray) -> ndarray:
     return z > 0
 
 
@@ -25,7 +25,7 @@ def softmax(z: ndarray) -> ndarray:
     return exp_z / sum_exp_z
 
 
-def softmax_backward(z: ndarray) -> ndarray:
+def softmax_prime(z: ndarray) -> ndarray:
     return softmax(z) * (1 - softmax(z))
 
 
@@ -33,7 +33,7 @@ def tanh(z: ndarray) -> ndarray:
     return np.tanh(z)
 
 
-def tanh_backward(z: ndarray) -> ndarray:
+def tanh_prime(z: ndarray) -> ndarray:
     return 1 - tanh(z) * tanh(z)
 
 
@@ -41,7 +41,7 @@ def sigmoid(z: ndarray) -> ndarray:
     return 1.0 / (1.0 + np.exp(-z))
 
 
-def sigmoid_backward(z: ndarray) -> ndarray:
+def sigmoid_prime(z: ndarray) -> ndarray:
     return sigmoid(z) * (1 - sigmoid(z))
 
 
@@ -51,12 +51,12 @@ def get_activation_func(name: Optional[str] = None) -> Tuple[Callable, Callable]
 
     name = name.lower()
     if name == 'relu':
-        return relu, relu_backward
+        return relu, relu_prime
     elif name == 'softmax':
-        return softmax, softmax_backward
+        return softmax, softmax_prime
     elif name == 'tanh':
-        return tanh, tanh_backward
+        return tanh, tanh_prime
     elif name == 'sigmoid':
-        return sigmoid, sigmoid_backward
+        return sigmoid, sigmoid_prime
     else:
         raise Exception('Non-supported activation function')
