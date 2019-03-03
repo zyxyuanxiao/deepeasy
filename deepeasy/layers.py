@@ -2,6 +2,7 @@ import numpy as np
 
 from .activations import get_activation_func
 from .dropout import inverted_dropout
+from .normalization import whitening
 from .types import *
 from .env import *
 
@@ -13,12 +14,18 @@ class Layer:
                  input_dim: int,
                  output_dim: int,
                  activation: Optional[str],
-                 dropout_keep_prob: float = 1.) -> None:
+                 layer_idx: int,
+                 *,
+                 batch_normalization: bool,
+                 dropout_keep_prob: float) -> None:
 
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.activation = activation.lower() if activation else ''
-        self.dropout_keep_prob = dropout_keep_prob
+        self.input_dim: int = input_dim
+        self.output_dim: int = output_dim
+        self.activation: str = activation.lower() if activation else ''
+        self.layer_idx: int = layer_idx
+        self.is_output_layer: bool = False
+        self.batch_normalization: bool = batch_normalization
+        self.dropout_keep_prob: float = dropout_keep_prob
 
         self.params: Dict[str, ndarray] = {}
 
@@ -32,7 +39,13 @@ class Layer:
 
     def forward(self, a_pre: ndarray) -> ndarray:
 
-        z = a_pre @ self.params['w'] + self.params['b']
+        z = a_pre @ self.params['w']
+        if self.batch_normalization and not self.is_output_layer:
+            z_white, mu, sigma = whitening(z)
+            z = z_white @ self.params['gamma'] + self.params['beta']
+        else:
+            z += self.params['b']
+
         a = self.g(z)  # shape = (该层神经元数, 样本数)
 
         # dropout
@@ -46,7 +59,7 @@ class Layer:
         return a
 
     def backward(self, da: Optional[ndarray], y: ndarray) -> ndarray:
-        if da is None:
+        if self.is_output_layer:
             dz = (self.forward_caches['a'] - y) / y.shape[LABELS_NUM_AXIS]
         else:
             dz = da * self.g_backward(self.forward_caches['z'])
@@ -59,6 +72,7 @@ class Layer:
         self.backward_caches['b'] = db
 
         da = dz @ self.params['w'].T
+
         return da
 
     def init_params(self) -> None:
@@ -73,14 +87,20 @@ class Layer:
             self.input_dim, self.output_dim
         ) / np.sqrt(n)
 
-        self.params['b'] = np.zeros(
-            shape=(1, self.output_dim)
-        )
+        if self.batch_normalization and not self.is_output_layer:
+            self.params['gamma'] = np.ones(
+                shape=(self.input_dim, self.output_dim)
+            )
 
-        # self.params['gamma'] = np.ones(
-        #     shape=(self.input_dim, self.output_dim)
-        # )
-        #
-        # self.params['beta'] = np.zeros(
-        #     shape=(1, self.output_dim)
-        # )
+            self.params['beta'] = np.zeros(
+                shape=(1, self.output_dim)
+            )
+        else:
+            self.params['b'] = np.zeros(
+                shape=(1, self.output_dim)
+            )
+
+    def reset(self) -> None:
+        self.init_params()
+        self.forward_caches.clear()
+        self.backward_caches.clear()

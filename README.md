@@ -36,7 +36,7 @@ nn_architecture = [
     {"input_dim": 28*28, "output_dim": 64, "activation": "relu"},
     {"input_dim": 64, "output_dim": 10, "activation": "softmax"},
 ]
-nn = NeuralNetwork(nn_architecture, seed=100)
+nn = NeuralNetwork(nn_architecture, batch_normalization=False, seed=100)
 ```
 
 载入 Mnist 数据集（需要提前下好，解压，放入同一个文件夹）：
@@ -72,12 +72,6 @@ nn.train(
 )
 ```
 
-```python
-开始训练，迭代次数：100
-100
-完成！用时：83.32364273071289s
-```
-
 画出 Cost、Accuracy 走势：
 
 ```python
@@ -90,10 +84,6 @@ nn.plot_history()
 
 ```python
 nn.test_model(x_test, y_test)
-```
-
-```python
-0.9739
 ```
 
 ### Advance
@@ -150,7 +140,7 @@ python3 setup.py install
 ## Todo list
 
 - Batch Normalization
-- L2 Regularization
+- Regularization
 - Tests
 
 ## References
@@ -161,3 +151,4 @@ SkalskiP. [ILearnDeepLearning.py](https://github.com/SkalskiP/ILearnDeepLearning
 
 斋藤康毅.《深度学习入门：基于Python的理论与实现》. 人民邮电出版社.
 
+keras-team. [keras](https://github.com/keras-team/keras). GitHub.

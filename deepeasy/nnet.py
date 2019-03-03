@@ -5,14 +5,15 @@ modified: 2019-02-26
 """
 
 import sys
-import time
 
 import numpy as np
 
 from .layers import Layer
 from .optimizers import get_gd
 from .costs import get_cost_func
+from .metrics import get_accuracy
 from .plot import plot_nn_history
+from .log import logger
 from .types import *
 from .env import *
 
@@ -37,18 +38,20 @@ class NeuralNetwork:
 
     def __init__(self,
                  nn_architecture: List[Dict],
+                 batch_normalization: bool = True,
                  seed: Optional[int] = None) -> None:
         """
         :param nn_architecture: 要初始化的神经网络结构。
         :param seed: 初始化权重矩阵的随机数种子。
         """
 
-        self.layers_count: int = len(nn_architecture)
         self.layers: List[Layer] = []
 
         self.seed: Optional[int] = seed
 
-        self.batch_normalization: bool = True
+        self.batch_normalization: bool = batch_normalization
+        self.mu: float = 0.
+        self.sigma: float = 1.
 
         self.train_count: int = 0  # 记录训练次数
         self.history: Dict[str, List[float]] = {}  # cost 记录等
@@ -58,12 +61,11 @@ class NeuralNetwork:
     def train(self,
               x_train: ndarray,
               y_train: ndarray,
-              epochs: int = 10000,
+              epochs: int = 100,
               *,
               new_train: bool = False,
               batch_size: int = 0,
               lr: float = 0.01,
-              batch_normalization: bool = True,
               gd_name: str = 'sgd',
               beta1: float = 0.9,
               beta2: float = 0.999,
@@ -77,7 +79,6 @@ class NeuralNetwork:
         :param new_train:
         :param batch_size:
         :param lr: 学习率
-        :param batch_normalization:
         :param gd_name: 梯度下降的算法
         :param beta1:
         :param beta2:
@@ -99,11 +100,7 @@ class NeuralNetwork:
         if new_train:
             self.reset_params(keep_history=True)
 
-        self.batch_normalization = batch_normalization
-
-        print(f'开始训练，迭代次数：{epochs}')
-
-        start = time.time()
+        logger.info(f'开始训练，迭代次数：{epochs}')
 
         for i in range(epochs):
 
@@ -121,7 +118,7 @@ class NeuralNetwork:
 
                 # 计算误差，精度
                 cost += cost_func(a, y_batch)
-                accuracy += self.get_accuracy(a, y_batch)
+                accuracy += get_accuracy(a, y_batch)
 
                 # 反向传播
                 self.backward_propration(y_batch)
@@ -131,18 +128,18 @@ class NeuralNetwork:
 
             self._add_to_history(cost=cost/t, accuracy=accuracy/t)
 
-            sys.stdout.write(f'\r{i + 1}')
-            sys.stdout.flush()
+            sys.stderr.write(f'\r{i + 1}')
+            sys.stderr.flush()
 
-        end = time.time()
-        print(f'\n完成！用时：{end - start}s')
+        sys.stderr.write('\n')
+        logger.info(f'训练结束！')
 
     def test_model(self, x: ndarray, y: ndarray) -> float:
 
         if self.batch_normalization:
             x = self.normalize(x)
         a = self.predict(x)
-        return self.get_accuracy(a, y)
+        return get_accuracy(a, y)
 
     def predict(self, x: ndarray) -> ndarray:
 
@@ -172,19 +169,21 @@ class NeuralNetwork:
         if self.history:  # 判断是否已有训练数据，否则不能加 1
             self.train_count += 1
 
-        self.batch_normalization = True
-
         for layer in self.layers:
-            layer.init_params()
+            layer.reset()
 
     def init_layers(self,
                     nn_architecture: List[Dict],
                     seed: Optional[int] = None) -> None:
 
+        if len(nn_architecture) == 0:
+            logger.error('神经网络结构不能为空！')
+            exit(1)
+
         # 随机数种子
         np.random.seed(seed)
 
-        for layer_arch in nn_architecture:
+        for i, layer_arch in enumerate(nn_architecture, 1):
             input_dim = layer_arch['input_dim']
             output_dim = layer_arch['output_dim']
             activation = layer_arch.get('activation')  # 可能为 None
@@ -194,25 +193,18 @@ class NeuralNetwork:
                 input_dim,
                 output_dim,
                 activation,
-                dropout_keep_prob
+                i,
+                batch_normalization=self.batch_normalization,
+                dropout_keep_prob=dropout_keep_prob
             )
 
             self.layers.append(layer)
+        layer.is_output_layer = True
 
-    @staticmethod
-    def normalize(x: ndarray) -> ndarray:
+    def normalize(self, x: ndarray) -> ndarray:
         """归一化。"""
 
-        # TODO
-        return x
-
-    @staticmethod
-    def whitening(z: ndarray) -> Tuple[ndarray, float, float]:
-        samples_num = z.shape[LABELS_NUM_AXIS]
-        mu = np.sum(z, LABELS_NUM_AXIS, keepdims=True) / samples_num
-        x = z - mu
-        sigma_square = np.sum(x**2, LABELS_NUM_AXIS, keepdims=True) / samples_num
-        return x / np.sqrt(sigma_square + EPSILON), mu, sigma_square
+        return (x - self.mu) / (self.sigma + EPSILON)
 
     @staticmethod
     def mini_batch(x_train: ndarray,
@@ -253,26 +245,6 @@ class NeuralNetwork:
         da: Optional[ndarray] = None
         for layer in reversed(self.layers):
             da = layer.backward(da, y)
-
-    # def l2_regularization(self, l2_lambda: float) -> float:
-    #     all_w_sum = 0
-    #     for layer_idx in range(1, self.layers_count + 1):
-    #         all_w_sum += np.sum(self.params_values[f'w{layer_idx}'] ** 2)
-    #     return l2_lambda / 2 * all_w_sum
-
-    @staticmethod
-    def get_accuracy(a: ndarray, y: ndarray) -> float:
-        feature_num = y.shape[LABEL_FEATURES_NUM_AXIS]
-        batch_size = y.shape[LABELS_NUM_AXIS]
-
-        if feature_num == 1:
-            a = np.where(a > 0.5, 1, 0)
-            return np.sum(a == y) / batch_size
-        else:
-            return np.sum(
-                a.argmax(axis=LABEL_FEATURES_NUM_AXIS)
-                == y.argmax(axis=LABEL_FEATURES_NUM_AXIS)
-            ) / batch_size
 
     def plot_history(self) -> None:
         plot_nn_history(self)
