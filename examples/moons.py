@@ -24,7 +24,7 @@ def main() -> None:
         {'input_dim': 2, 'output_dim': 16, 'activation': 'relu'},
         {'input_dim': 16, 'output_dim': 1, 'activation': 'sigmoid'},
     ]
-    nn = nnet.NeuralNetwork(nn_architecture, batch_normalization=True, seed=100)
+    nn = nnet.NeuralNetwork(nn_architecture, batch_normalization=False, seed=100)
     nn.train(
         x_train, y_train, 1000,
         new_train=True,

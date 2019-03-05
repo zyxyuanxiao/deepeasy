@@ -15,14 +15,14 @@ def main() -> None:
         {'input_dim': 64, 'output_dim': 10, 'activation': 'softmax'},
     ]
 
-    nn = nnet.NeuralNetwork(nn_architecture, batch_normalization=True, seed=100)
+    nn = nnet.NeuralNetwork(nn_architecture, batch_normalization=False, seed=100)
 
     nn.train(
         x_train, y_train, 100,
         new_train=True,
         batch_size=600,
-        lr=0.016,
-        gd_name='sgd'
+        lr=0.001,
+        gd_name='adam'
     )
 
     logger.info(nn.test_model(x_test, y_test))
