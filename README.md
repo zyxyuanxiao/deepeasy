@@ -36,14 +36,20 @@ nn_architecture = [
     {'input_dim': 28 * 28, 'output_dim': 64, 'activation': 'relu'},
     {'input_dim': 64, 'output_dim': 10, 'activation': 'softmax'},
 ]
+# **注意**：Batch Normalization 尚未实现，
+# `batch_normalization` 应设为 `False`
 nn = NeuralNetwork(nn_architecture, batch_normalization=False, seed=100)
 ```
 
-载入 Mnist 数据集（需要提前下好，解压，放入同一个文件夹）：
+载入 Mnist 数据集：
 
 ```python
 from deepeasy.datasets import load_mnist
 
+# 需要提前下好，解压，放入同一个文件夹
+# 下载地址：http://yann.lecun.com/exdb/mnist/
+# 一共 4 个 *.gz 文件
+# 分别代表训练数据、训练数据标签、测试数据、测试数据标签
 file_path = '/home/zzzzer/Documents/data/数据集/数字手写体/mnist/'
 x_train, y_train, x_test, y_test = load_mnist(file_path)
 # x_train.shape=(60000, 784), y_train.shape=(60000, 10)
@@ -62,13 +68,16 @@ Image.fromarray(x_test[img_idx].reshape(28, 28))
 y_test[img_idx]
 ```
 
+![img](./imgs/01.png)
+
 开始训练：
+
 ```python
 nn.train(
-    x_train, y_train, 100,
+    x_train, y_train, 50,
     batch_size=600,
     lr=0.001,
-    gd_name='adam'
+    optimizer_name='adam'
 )
 ```
 
@@ -78,7 +87,7 @@ nn.train(
 nn.plot_history()
 ```
 
-![img](./imgs/01.png)
+![img](./imgs/02.png)
 
 测试模型：
 
@@ -92,29 +101,36 @@ nn.test_model(x_test, y_test)
 
 ```python
 nn.train(
-    x_train, y_train, 100,
+    x_train, y_train, 50,
     batch_size=600,
     lr=0.001,
-    gd_name='adam'
+    optimizer_name='adam'
 )
+
+nn.plot_history()
 ```
 
-`new_train=True` 清除前面的模型，开启新一轮训练，图像会在原有基础上画出：
+可以看到，迭代次数从 50 到了 100：
+
+![img](./imgs/03.png)
+
+`new_train=True` 清除前面模型的参数，重新开始训练，但前面模型的 Cost 和 Accuracy 历史会在被保留：
 
 ```python
 nn.train(
     x_train, y_train, 100,
     new_train=True,
-    batch_size=600,
-    lr=0.016,
-    gd_name='sgd'
+    batch_size=600, 
+    lr=0.001,
+    optimizer_name='rmsprop'
 )
+
 nn.plot_history()
 ```
 
-![img](./imgs/02.png)
+![img](./imgs/04.png)
 
-`nn.reset_params()` 清空所有训练记录，回到初始状态，但保留神经网络结构。
+`nn.reset_params(keep_history=False)` 清空所有训练记录，回到初始状态，但保留神经网络结构。
 
 ## Installation
 
@@ -122,7 +138,7 @@ nn.plot_history()
 python3 setup.py install
 ```
 
-## Include
+## Include algorithms
 
 - Xavier Initializer
 - mini batch
