@@ -33,8 +33,9 @@ nn_architecture: List[Dict] = [
 from deepeasy.nnet import NeuralNetwork
 
 nn_architecture = [
-    {'input_dim': 28 * 28, 'output_dim': 64, 'activation': 'relu'},
-    {'input_dim': 64, 'output_dim': 10, 'activation': 'softmax'},
+    {"input_dim": 28*28, "output_dim": 16, "activation": "relu"},
+    {"input_dim": 16, "output_dim": 16, "activation": "relu"},
+    {"input_dim": 16, "output_dim": 10, "activation": "softmax"},
 ]
 # **注意**：Batch Normalization 尚未实现，
 # `batch_normalization` 应设为 `False`
@@ -114,7 +115,7 @@ nn.plot_history()
 
 ![img](./imgs/03.png)
 
-`new_train=True` 清除前面模型的参数，重新开始训练，但前面模型的 Cost 和 Accuracy 历史会在被保留：
+`new_train=True` 清除前面模型的参数，重新开始训练，但前面模型的 Cost 和 Accuracy 历史会被保留：
 
 ```python
 nn.train(
