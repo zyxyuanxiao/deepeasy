@@ -6,7 +6,7 @@ modified: 2019-02-24
 
 import numpy as np
 
-from .types import *
+from .mytypes import *
 from .env import *
 
 
@@ -19,9 +19,9 @@ def relu_prime(z: ndarray) -> ndarray:
 
 
 def softmax(z: ndarray) -> ndarray:
-    c = np.max(z, axis=LABEL_FEATURES_NUM_AXIS, keepdims=True)
+    c = np.max(z, axis=FEATURE_AXIS, keepdims=True)
     exp_z = np.exp(z-c)  # 防溢出
-    sum_exp_z = np.sum(exp_z, axis=LABEL_FEATURES_NUM_AXIS, keepdims=True)
+    sum_exp_z = np.sum(exp_z, axis=FEATURE_AXIS, keepdims=True)
     return exp_z / sum_exp_z
 
 
@@ -47,7 +47,7 @@ def sigmoid_prime(z: ndarray) -> ndarray:
 
 def get_activation_func(name: Optional[str] = None) -> Tuple[Callable, Callable]:
     if name is None:  # 代表不使用激活函数
-        return lambda z: z, lambda da, z: da
+        return lambda z: z, lambda z: 1
 
     name = name.lower()
     if name == 'relu':

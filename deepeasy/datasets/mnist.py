@@ -1,5 +1,5 @@
 import numpy as np
-from ..types import *
+from ..mytypes import *
 
 
 def load_mnist(path: str) -> Tuple[ndarray, ndarray, ndarray, ndarray]:
@@ -11,7 +11,7 @@ def load_mnist(path: str) -> Tuple[ndarray, ndarray, ndarray, ndarray]:
     y_train = load_mnist_label(path+'train-labels-idx1-ubyte')
     x_test = load_mnist_images(path+'t10k-images-idx3-ubyte')
     y_test = load_mnist_label(path+'t10k-labels-idx1-ubyte')
-    x_train = x_train.reshape(-1, 28*28)
+    x_train = x_train.reshape(-1, 28 * 28)
     y_train = change_one_hot_label(y_train)
     x_test = x_test.reshape(-1, 28 * 28)
     y_test = change_one_hot_label(y_test)

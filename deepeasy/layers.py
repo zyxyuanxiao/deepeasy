@@ -3,7 +3,7 @@ import numpy as np
 from .activations import get_activation_func
 from .dropout import inverted_dropout
 from .normalization import whitening
-from .types import *
+from .mytypes import *
 from .env import *
 
 
@@ -16,6 +16,7 @@ class Layer:
                  activation: Optional[str],
                  layer_idx: int,
                  *,
+                 is_output_layer: bool = False,
                  batch_normalization: bool,
                  dropout_keep_prob: float) -> None:
 
@@ -23,12 +24,11 @@ class Layer:
         self.output_dim: int = output_dim
         self.activation: str = activation.lower() if activation else ''
         self.layer_idx: int = layer_idx
-        self.is_output_layer: bool = False
+        self.is_output_layer: bool = is_output_layer
         self.batch_normalization: bool = batch_normalization
         self.dropout_keep_prob: float = dropout_keep_prob
 
         self.params: Dict[str, ndarray] = {}
-
         self.init_params()
 
         self.g, self.g_prime = get_activation_func(activation)
@@ -41,14 +41,16 @@ class Layer:
 
         z = a_pre @ self.params['w']
         if self.batch_normalization and not self.is_output_layer:
-            z_white, mu, sigma = whitening(z)
-            self.forward_caches['z_tilde'] = z_white
-            z_tilde = z_white @ self.params['gamma'] + self.params['beta']
+            z_white, mu, sigma_square = whitening(z)
+            self.forward_caches['z_white'] = z_white
+            self.forward_caches['mu'] = mu
+            self.forward_caches['sigma_square'] = sigma_square
+            z_tilde = z_white * self.params['gamma'] + self.params['beta']
             self.forward_caches['z_tilde'] = z_tilde
+            a = self.g(z_tilde)
         else:
             z += self.params['b']
-
-        a = self.g(z)  # shape = (该层神经元数, 样本数)
+            a = self.g(z)
 
         # dropout
         if self.dropout_keep_prob < 1:
@@ -61,27 +63,39 @@ class Layer:
         return a
 
     def backward(self, da: Optional[ndarray], y: ndarray) -> ndarray:
+        batch_size = y.shape[SAMPLE_AXIS]
         if self.is_output_layer:
-            dz = (self.forward_caches['a'] - y) / y.shape[LABELS_NUM_AXIS]
+            dz = (self.forward_caches['a'] - y) / batch_size
+            db = np.sum(dz, axis=SAMPLE_AXIS, keepdims=True)
+            self.backward_caches['b'] = db
+        elif self.batch_normalization:
+            z = self.forward_caches['z']
+            mu = self.forward_caches['mu']
+            sigma_square = self.forward_caches['sigma_square']
+            z_white = self.forward_caches['z_white']
+            z_tilde = self.forward_caches['z_tilde']
+
+            # TODO
+            dz_tilde = da * self.g_prime(z_tilde)
+            dgamma = np.sum(z_white.T @ dz_tilde, axis=SAMPLE_AXIS, keepdims=True)
+            self.backward_caches['gamma'] = dgamma
+            dbeta = np.sum(dz_tilde, axis=SAMPLE_AXIS, keepdims=True)
+            self.backward_caches['beta'] = dbeta
+            dz_white = dz_tilde @ self.params['gamma'].T
+            ddsigma_square = -0.5 * (z - mu) * ((sigma_square + EPSILON)**(-1.5))
+            ddmu = -1 / np.sqrt(sigma_square + EPSILON) - 2 / batch_size * np.sum(z - mu, axis=SAMPLE_AXIS, keepdims=True) * ddsigma_square
+            ddz = 1 / np.sqrt(sigma_square + EPSILON) + ddsigma_square * (2 / batch_size) * (z - mu) + ddmu / batch_size
+            dz = dz_white * ddz
+            # dsigma_square = dz_white.T @ (z - mu) * -0.5 * ((sigma_square + EPSILON)**(-1.5))
+            # dmu = -np.sum(dz_white, axis=SAMPLE_AXIS, keepdims=True) / np.sqrt(sigma_square + EPSILON) + -2 / batch_size * dsigma_square * np.sum(z - mu, axis=SAMPLE_AXIS, keepdims=True)
+            # dz = dz_white / np.sqrt(sigma_square + EPSILON) + dsigma_square * (2 / batch_size) * (z - mu) + dmu / batch_size
         else:
-            if self.batch_normalization:
-                dz_tilde = da * self.g_prime(self.forward_caches['z_tilde'])
-                dgamma = self.forward_caches['z_white'].T @ dz_tilde
-                self.backward_caches['dgamma'] = dgamma
-                dbeta = np.sum(dz_tilde, axis=LABELS_NUM_AXIS, keepdims=True)
-                self.backward_caches['dbeta'] = dbeta
-                dz_white = dz_tilde @ self.params['gamma'].T
-                # TODO
-                dz = 1
-            else:
-                dz = da * self.g_prime(self.forward_caches['z'])
+            dz = da * self.g_prime(self.forward_caches['z'])
+            db = np.sum(dz, axis=SAMPLE_AXIS, keepdims=True)
+            self.backward_caches['b'] = db
 
         dw = self.forward_caches['a_pre'].T @ dz
-
-        db = np.sum(dz, axis=LABELS_NUM_AXIS, keepdims=True)
-
         self.backward_caches['w'] = dw
-        self.backward_caches['b'] = db
 
         da = dz @ self.params['w'].T
 
@@ -101,7 +115,7 @@ class Layer:
 
         if self.batch_normalization and not self.is_output_layer:
             self.params['gamma'] = np.ones(
-                shape=(self.input_dim, self.output_dim)
+                shape=(1, self.output_dim)
             )
 
             self.params['beta'] = np.zeros(

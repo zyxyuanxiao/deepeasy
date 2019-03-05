@@ -7,7 +7,7 @@ modified: 2019-02-26
 import numpy as np
 
 from .layers import Layer
-from .types import *
+from .mytypes import *
 
 
 class GD:

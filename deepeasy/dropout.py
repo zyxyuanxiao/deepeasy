@@ -1,6 +1,6 @@
 import numpy as np
 
-from .types import *
+from .mytypes import *
 
 
 def inverted_dropout(a: ndarray,

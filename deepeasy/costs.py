@@ -6,7 +6,7 @@ modified:
 
 import numpy as np
 
-from .types import *
+from .mytypes import *
 from .env import *
 
 
@@ -16,8 +16,8 @@ def cost_mean_squared(a: ndarray, y: ndarray) -> float:
 
 
 def cost_cross_entropy(a: ndarray, y: ndarray) -> float:
-    feature_num = a.shape[LABEL_FEATURES_NUM_AXIS]
-    batch_size = a.shape[LABELS_NUM_AXIS]
+    feature_num = a.shape[FEATURE_AXIS]
+    batch_size = a.shape[SAMPLE_AXIS]
 
     if feature_num == 1:
         cost = -np.sum(y * np.log(a + EPSILON) + (1 - y) * np.log(1 - a + EPSILON)) / batch_size

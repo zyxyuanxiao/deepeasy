@@ -14,7 +14,7 @@ from .costs import get_cost_func
 from .metrics import get_accuracy
 from .plot import plot_nn_history
 from .log import logger
-from .types import *
+from .mytypes import *
 from .env import *
 
 
@@ -176,7 +176,8 @@ class NeuralNetwork:
                     nn_architecture: List[Dict],
                     seed: Optional[int] = None) -> None:
 
-        if len(nn_architecture) == 0:
+        layer_count = len(nn_architecture)
+        if layer_count == 0:
             logger.error('神经网络结构不能为空！')
             exit(1)
 
@@ -189,17 +190,21 @@ class NeuralNetwork:
             activation = layer_arch.get('activation')  # 可能为 None
             dropout_keep_prob = layer_arch.get('dropout_keep_prob', 1.)
 
+            is_output_layer = False
+            if i == layer_count:
+                is_output_layer = True
+
             layer = Layer(
                 input_dim,
                 output_dim,
                 activation,
                 i,
+                is_output_layer=is_output_layer,
                 batch_normalization=self.batch_normalization,
                 dropout_keep_prob=dropout_keep_prob
             )
 
             self.layers.append(layer)
-        layer.is_output_layer = True
 
     def normalize(self, x: ndarray) -> ndarray:
         """归一化。"""
@@ -212,7 +217,7 @@ class NeuralNetwork:
                    batch_size: int) -> Iterator[Tuple[ndarray, ndarray]]:
         """每次迭代随机抽 batch_size 的样本出来。"""
 
-        samples_num = x_train.shape[LABELS_NUM_AXIS]
+        samples_num = x_train.shape[SAMPLE_AXIS]
         if batch_size <= 0:
             batch_size = samples_num
 
