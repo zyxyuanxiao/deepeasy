@@ -11,18 +11,19 @@ def main() -> None:
 
     # 神经网络结构
     nn_architecture = [
-        {'input_dim': 28 * 28, 'output_dim': 64, 'activation': 'relu'},
-        {'input_dim': 64, 'output_dim': 10, 'activation': 'softmax'},
+        {'input_dim': 28 * 28, 'output_dim': 16, 'activation': 'relu'},
+        {'input_dim': 16, 'output_dim': 16, 'activation': 'relu'},
+        {'input_dim': 16, 'output_dim': 10, 'activation': 'softmax'},
     ]
 
     nn = nnet.NeuralNetwork(nn_architecture, batch_normalization=False, seed=100)
 
     nn.train(
-        x_train, y_train, 100,
+        x_train, y_train, 50,
         new_train=True,
         batch_size=600,
         lr=0.001,
-        gd_name='adam'
+        optimizer_name='adam'
     )
 
     logger.info(nn.test_model(x_test, y_test))

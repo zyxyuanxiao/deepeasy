@@ -34,8 +34,6 @@ def plot_nn_history(neural_network) -> None:
             x_axis, accuracy_history, label=f'Train {i+1}'
         )
         ax2.set_xlim(0, epochs)
-        ax2.set_ylim(0., 1.0)
-        ax2.set_yticks(np.linspace(0, 1, 11))
         ax2.grid(True)
 
     ax1.legend(loc='upper right', shadow=True)

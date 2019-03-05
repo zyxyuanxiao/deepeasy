@@ -9,7 +9,7 @@ import sys
 import numpy as np
 
 from .layers import Layer
-from .optimizers import get_gd
+from .optimizers import get_optimizer
 from .costs import get_cost_func
 from .metrics import get_accuracy
 from .plot import plot_nn_history
@@ -66,7 +66,7 @@ class NeuralNetwork:
               new_train: bool = False,
               batch_size: int = 0,
               lr: float = 0.01,
-              gd_name: str = 'sgd',
+              optimizer_name: str = 'sgd',
               beta1: float = 0.9,
               beta2: float = 0.999,
               l2_lambda: Optional[float] = None,
@@ -79,7 +79,7 @@ class NeuralNetwork:
         :param new_train:
         :param batch_size:
         :param lr: 学习率
-        :param gd_name: 梯度下降的算法
+        :param optimizer_name: 梯度下降的算法
         :param beta1:
         :param beta2:
         :param l2_lambda:
@@ -94,7 +94,7 @@ class NeuralNetwork:
         y.shape = (样本数, 每个样本 feature 数)
         """
 
-        gd = get_gd(gd_name, lr, beta1, beta2)
+        optimizer = get_optimizer(optimizer_name, lr, beta1, beta2)
         cost_func = get_cost_func(cost_func_name)
 
         if new_train:
@@ -107,7 +107,7 @@ class NeuralNetwork:
             t: int = 0
             cost: float = 0.
             accuracy: float = 0.
-            gd.reset()
+            optimizer.reset()
 
             for x_batch, y_batch in self.mini_batch(x_train, y_train, batch_size):
 
@@ -124,7 +124,7 @@ class NeuralNetwork:
                 self.backward_propration(y_batch)
 
                 # 更新 w，b
-                gd.update(self.layers)
+                optimizer.update(self.layers)
 
             self._add_to_history(cost=cost/t, accuracy=accuracy/t)
 

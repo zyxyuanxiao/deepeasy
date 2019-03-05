@@ -136,10 +136,10 @@ class Nadam(Adam):
                 layer.params[theta] -= lr_t * ((self.beta1 * self.v[k] + (1. - self.beta1) * layer.backward_caches[theta]) / (np.sqrt(self.s[k]) + 1e-7))
 
 
-def get_gd(name: str,
-           lr: float,
-           beta1: float,
-           beta2: float) -> GD:
+def get_optimizer(name: str,
+                  lr: float,
+                  beta1: float,
+                  beta2: float) -> GD:
 
     name = name.lower()
     if name == 'sgd':
