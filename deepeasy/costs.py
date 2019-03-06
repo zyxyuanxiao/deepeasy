@@ -20,7 +20,8 @@ def cost_cross_entropy(a: ndarray, y: ndarray) -> float:
     batch_size = a.shape[SAMPLE_AXIS]
 
     if feature_num == 1:
-        cost = -np.sum(y * np.log(a + EPSILON) + (1 - y) * np.log(1 - a + EPSILON)) / batch_size
+        cost = -np.sum(y * np.log(a + EPSILON)
+                       + (1 - y) * np.log(1 - a + EPSILON)) / batch_size
     else:
         cost = -np.sum(y * np.log(a + EPSILON)) / batch_size
     return cost
