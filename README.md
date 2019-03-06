@@ -47,11 +47,11 @@ nn = NeuralNetwork(nn_architecture, batch_normalization=False, seed=100)
 ```python
 from deepeasy.datasets import load_mnist
 
-# 需要提前下好，解压，放入同一个文件夹
+# 需要提前下好，放入同一个文件夹
 # 下载地址：http://yann.lecun.com/exdb/mnist/
 # 一共 4 个 *.gz 文件
 # 分别代表训练数据、训练数据标签、测试数据、测试数据标签
-file_path = '/home/zzzzer/Documents/data/数据集/数字手写体/mnist/'
+file_path = '/home/zzzzer/Documents/data/数据集/mnist/'
 x_train, y_train, x_test, y_test = load_mnist(file_path)
 # x_train.shape=(60000, 784), y_train.shape=(60000, 10)
 # x_test.shape=(10000, 784), y_test.shape=(10000, 10)

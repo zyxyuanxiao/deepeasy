@@ -4,7 +4,7 @@ from deepeasy.datasets import load_mnist
 
 
 def main() -> None:
-    file_path = '/home/zzzzer/Documents/data/数据集/数字手写体/mnist/'
+    file_path = '/home/zzzzer/Documents/data/数据集/mnist/'
     x_train, y_train, x_test, y_test = load_mnist(file_path)
     logger.info(f'x_train.shape={x_train.shape}, y_train.shape={y_train.shape}')
     logger.info(f'x_test.shape={x_test.shape}, y_test.shape={y_test.shape}')
