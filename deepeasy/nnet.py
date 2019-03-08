@@ -185,6 +185,8 @@ class NeuralNetwork:
         if self.history:  # 判断是否已有训练数据，否则不能加 1
             self.train_count += 1
 
+        self.batch_normalization = False
+
         for layer in self.layers:
             layer.reset()
 
