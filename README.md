@@ -132,24 +132,26 @@ nn.plot_history()
 
 `nn.reset_params(keep_history=False)` 清空所有训练记录，回到初始状态，但保留神经网络结构。
 
+其他用法见 `nn.train()` 的参数。
+
 ## Installation
 
 ```python
 python3 setup.py install
 ```
 
-## Include algorithms
+## Support algorithms
 
 - Xavier Initializer
-- mini batch
-- Forward propagation
-- Backward propagation
+- Mini Batch
+- Forward Propagation
+- Backward Propagation
 - SGD
 - Momentum
 - RMSprop
 - Adam
 - Nadam
-- inverted dropout
+- Inverted Dropout
 - Cross Entropy Cost
 - Mean Squared Cost
 
