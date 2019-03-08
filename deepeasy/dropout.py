@@ -18,7 +18,7 @@ def inverted_dropout(a: ndarray,
     return a * d / keep_prob
 
 
-def update_keep_prob(layers: List, keep_probs: Tuple[float]) -> None:
+def update_keep_prob(layers: List, keep_probs: List[float]) -> None:
     """更新每层的 keep_prob。"""
 
     if len(keep_probs) != len(layers):

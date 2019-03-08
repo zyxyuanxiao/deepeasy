@@ -12,7 +12,7 @@ from .layers import Layer
 from .optimizers import get_optimizer
 from .costs import get_cost_func
 from .metrics import get_accuracy
-from .dropout import update_keep_prob, check_keep_prob_range
+from .dropout import update_keep_prob
 from .plot import plot_nn_history
 from .log import logger
 from .mytypes import *
@@ -28,7 +28,6 @@ class NeuralNetwork:
             ‘input_dim’: int,  # 该层每个神经元被连接数
             'output_dim': int, # 该层神经元数
             'activation': str, # 该层激活函数，可选
-            'dropout_keep_prob': float  # 该层 dropout 神经元保留概率，可选
         },
         {   # 第二层
             ...
@@ -39,7 +38,6 @@ class NeuralNetwork:
 
     def __init__(self,
                  nn_architecture: List[Dict],
-                 batch_normalization: bool = False,
                  seed: Optional[int] = None) -> None:
         """
         :param nn_architecture: 要初始化的神经网络结构。
@@ -50,7 +48,7 @@ class NeuralNetwork:
 
         self.seed: Optional[int] = seed
 
-        self.batch_normalization: bool = batch_normalization
+        self.batch_normalization: bool = False
 
         self.is_train: bool = True
 
@@ -70,8 +68,9 @@ class NeuralNetwork:
               optimizer_name: str = 'sgd',
               beta1: float = 0.9,
               beta2: float = 0.999,
+              batch_normalization: bool = False,
               l2_lambda: float = 0.,
-              dropout_keep_probs: Optional[Tuple[float]] = None,
+              dropout_keep_probs: Optional[List[float]] = None,
               cost_func_name: str = 'cross_entropy') -> None:
         """
         :param x_train:
@@ -83,6 +82,7 @@ class NeuralNetwork:
         :param optimizer_name: 梯度下降的算法
         :param beta1:
         :param beta2:
+        :param batch_normalization:
         :param l2_lambda:
         :param dropout_keep_probs: 指定每层的 dropout_keep_prob
         :param cost_func_name:
@@ -94,16 +94,25 @@ class NeuralNetwork:
         y.shape = (样本数, 每个样本 feature 数)
         """
 
+        # 开启 batch_normalization，必须清空原有参数
+        if batch_normalization != self.batch_normalization:
+            if not new_train:
+                logger.error(
+                    '修改 batch_normalization 参数后，必须将 new_train 参数设为 True！'
+                )
+                exit(1)
+            self.batch_normalization = batch_normalization
+
         if new_train:
             self.reset_params(keep_history=True)
-
-        self.is_train = True
 
         optimizer = get_optimizer(optimizer_name, lr, beta1, beta2)
         cost_func = get_cost_func(cost_func_name)
 
         if dropout_keep_probs is not None:
             update_keep_prob(self.layers, dropout_keep_probs)
+
+        self.is_train = True
 
         logger.info(f'开始训练，迭代次数：{epochs}')
 
@@ -195,8 +204,6 @@ class NeuralNetwork:
             input_dim = layer_arch['input_dim']
             output_dim = layer_arch['output_dim']
             activation = layer_arch.get('activation', '').lower()
-            dropout_keep_prob = layer_arch.get('dropout_keep_prob', 1.)
-            check_keep_prob_range(dropout_keep_prob)
 
             is_output_layer = False
             if i == layer_count:
@@ -209,7 +216,6 @@ class NeuralNetwork:
                 activation,
                 i,
                 is_output_layer=is_output_layer,
-                dropout_keep_prob=dropout_keep_prob
             )
 
             self.layers.append(layer)

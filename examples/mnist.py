@@ -25,13 +25,14 @@ def main() -> None:
         {'input_dim': 16, 'output_dim': 10, 'activation': 'softmax'},
     ]
 
-    nn = nnet.NeuralNetwork(nn_architecture, batch_normalization=False, seed=100)
+    nn = nnet.NeuralNetwork(nn_architecture, seed=100)
 
     nn.train(
         x_train, y_train, 50,
         new_train=True,
         batch_size=600,
         lr=0.001,
+        batch_normalization=False,
         optimizer_name='adam'
     )
 

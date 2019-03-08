@@ -18,7 +18,6 @@ nn_architecture: List[Dict] = [
         'input_dim': int,  # 该层每个神经元被连接数
         'output_dim': int, # 该层神经元数
         'activation': str, # 该层激活函数，可选
-        'dropout_keep_prob': float  # 该层 dropout 神经元保留概率，可选
     },
     {   # 第二层
         ...

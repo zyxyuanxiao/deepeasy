@@ -23,8 +23,7 @@ class Layer:
                  activation: str,
                  layer_idx: int,
                  *,
-                 is_output_layer: bool = False,
-                 dropout_keep_prob: float = 1.) -> None:
+                 is_output_layer: bool = False) -> None:
 
         self.neural_network = neural_network
         self.input_dim: int = input_dim
@@ -32,7 +31,7 @@ class Layer:
         self.activation: str = activation.lower()
         self.layer_idx: int = layer_idx
         self.is_output_layer: bool = is_output_layer
-        self.dropout_keep_prob: float = dropout_keep_prob
+        self.dropout_keep_prob: float = 1.
 
         self.params: Dict[str, ndarray] = {}
         self.init_params()
@@ -109,6 +108,8 @@ class Layer:
 
     def init_params(self) -> None:
 
+        self.params.clear()
+
         # Xavier Initializer
         # 除以每个神经元被连接数的平方根
         # 如果用 ReLU，除以每个神经元被连接数的平方根乘 2，会更好
@@ -134,5 +135,6 @@ class Layer:
 
     def reset(self) -> None:
         self.init_params()
+        self.dropout_keep_prob = 1.
         self.forward_caches.clear()
         self.backward_caches.clear()
