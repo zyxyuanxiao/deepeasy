@@ -33,9 +33,9 @@ nn_architecture: List[Dict] = [
 from deepeasy.nnet import NeuralNetwork
 
 nn_architecture = [
-    {"input_dim": 28*28, "output_dim": 16, "activation": "relu"},
-    {"input_dim": 16, "output_dim": 16, "activation": "relu"},
-    {"input_dim": 16, "output_dim": 10, "activation": "softmax"},
+    {'input_dim': 28 * 28, 'output_dim': 16, 'activation': 'relu'},
+    {'input_dim': 16, 'output_dim': 16, 'activation': 'relu'},
+    {'input_dim': 16, 'output_dim': 10, 'activation': 'softmax'},
 ]
 # **注意**：Batch Normalization 尚未实现，
 # `batch_normalization` 应设为 `False`
@@ -144,7 +144,7 @@ python3 setup.py install
 - Xavier Initializer
 - mini batch
 - Forward propagation
-- Back propagation
+- Backward propagation
 - SGD
 - Momentum
 - RMSprop
