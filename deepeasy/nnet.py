@@ -38,7 +38,7 @@ class NeuralNetwork:
 
     def __init__(self,
                  nn_architecture: List[Dict],
-                 batch_normalization: bool = True,
+                 batch_normalization: bool = False,
                  seed: Optional[int] = None) -> None:
         """
         :param nn_architecture: 要初始化的神经网络结构。
@@ -69,7 +69,7 @@ class NeuralNetwork:
               optimizer_name: str = 'sgd',
               beta1: float = 0.9,
               beta2: float = 0.999,
-              l2_lambda: Optional[float] = None,
+              l2_lambda: float = 0.,
               dropout: bool = False,
               cost_func_name: str = 'cross_entropy') -> None:
         """
@@ -195,6 +195,7 @@ class NeuralNetwork:
                 is_output_layer = True
 
             layer = Layer(
+                self,
                 input_dim,
                 output_dim,
                 activation,

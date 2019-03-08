@@ -55,10 +55,11 @@ def show_mnist(data, x_size: int = 16, y_size: int = 9) -> None:
     :param y_size:
     :return:
     """
+
     try:
         from PIL import Image
     except ImportError:
-        logger.error('需安装 PIL！')
+        logger.error('需先安装 PIL！')
         return
 
     imgs = Image.new('RGBA', (30 * x_size, 30 * y_size))  # 打底背景

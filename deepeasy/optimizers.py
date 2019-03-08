@@ -12,7 +12,7 @@ from .mytypes import *
 
 class GD:
 
-    def __init__(self, lr=0.01) -> None:
+    def __init__(self, lr: float = 0.01) -> None:
         self.lr: float = lr
 
     def update(self, layers: List[Layer]) -> None:
@@ -25,7 +25,7 @@ class GD:
 
 class SGD(GD):
 
-    def __init__(self, lr=0.01) -> None:
+    def __init__(self, lr: float = 0.01) -> None:
         super().__init__(lr)
 
     def update(self, layers: List[Layer]) -> None:
@@ -37,7 +37,7 @@ class SGD(GD):
 
 class Momentum(GD):
 
-    def __init__(self, lr=0.01, beta=0.9) -> None:
+    def __init__(self, lr: float = 0.01, beta: float = 0.9) -> None:
         super().__init__(lr)
         self.beta = beta
         self.v = {}
@@ -57,7 +57,7 @@ class Momentum(GD):
 
 class RMSprop(GD):
 
-    def __init__(self, lr=0.001, beta=0.9) -> None:
+    def __init__(self, lr: float = 0.001, beta: float = 0.9) -> None:
         super().__init__(lr)
         self.beta = beta
         self.s = {}
@@ -79,7 +79,7 @@ class RMSprop(GD):
 
 class Adam(GD):
 
-    def __init__(self, lr=0.001, beta1=0.9, beta2=0.999) -> None:
+    def __init__(self, lr: float = 0.001, beta1: float = 0.9, beta2: float = 0.999) -> None:
         super().__init__(lr)
         self.beta1 = beta1
         self.beta2 = beta2
@@ -114,7 +114,7 @@ class Adam(GD):
 
 class Nadam(Adam):
 
-    def __init__(self, lr=0.002, beta1=0.9, beta2=0.999) -> None:
+    def __init__(self, lr: float = 0.002, beta1: float = 0.9, beta2: float = 0.999) -> None:
         super().__init__(lr, beta1, beta2)
 
     def update(self, layers: List[Layer]) -> None:

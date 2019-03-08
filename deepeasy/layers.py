@@ -11,6 +11,7 @@ class Layer:
     """神经网络中的每一层。"""
 
     def __init__(self,
+                 neural_network,
                  input_dim: int,
                  output_dim: int,
                  activation: Optional[str],
@@ -20,6 +21,7 @@ class Layer:
                  batch_normalization: bool,
                  dropout_keep_prob: float) -> None:
 
+        self.neural_network = neural_network
         self.input_dim: int = input_dim
         self.output_dim: int = output_dim
         self.activation: str = activation.lower() if activation else ''
@@ -53,7 +55,7 @@ class Layer:
             a = self.g(z)
 
         # dropout
-        if self.dropout_keep_prob < 1:
+        if self.dropout_keep_prob < 1.:
             a = inverted_dropout(a, self.dropout_keep_prob)
 
         self.forward_caches['a_pre'] = a_pre
@@ -75,7 +77,7 @@ class Layer:
             z_white = self.forward_caches['z_white']
             z_tilde = self.forward_caches['z_tilde']
 
-            # TODO
+            # TODO batch normalization
             dz_tilde = da * self.g_prime(z_tilde)
             dgamma = np.sum(z_white.T @ dz_tilde, axis=SAMPLE_AXIS, keepdims=True)
             self.backward_caches['gamma'] = dgamma
