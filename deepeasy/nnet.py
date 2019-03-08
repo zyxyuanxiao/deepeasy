@@ -201,7 +201,6 @@ class NeuralNetwork:
                 activation,
                 i,
                 is_output_layer=is_output_layer,
-                batch_normalization=self.batch_normalization,
                 dropout_keep_prob=dropout_keep_prob
             )
 

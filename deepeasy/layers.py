@@ -18,7 +18,6 @@ class Layer:
                  layer_idx: int,
                  *,
                  is_output_layer: bool = False,
-                 batch_normalization: bool,
                  dropout_keep_prob: float) -> None:
 
         self.neural_network = neural_network
@@ -27,7 +26,6 @@ class Layer:
         self.activation: str = activation.lower() if activation else ''
         self.layer_idx: int = layer_idx
         self.is_output_layer: bool = is_output_layer
-        self.batch_normalization: bool = batch_normalization
         self.dropout_keep_prob: float = dropout_keep_prob
 
         self.params: Dict[str, ndarray] = {}
@@ -42,7 +40,7 @@ class Layer:
     def forward(self, a_pre: ndarray) -> ndarray:
 
         z = a_pre @ self.params['w']
-        if self.batch_normalization and not self.is_output_layer:
+        if self.neural_network.batch_normalization and not self.is_output_layer:
             z_white, mu, sigma_square = whitening(z)
             self.forward_caches['z_white'] = z_white
             self.forward_caches['mu'] = mu
@@ -70,7 +68,7 @@ class Layer:
             dz = (self.forward_caches['a'] - y) / batch_size
             db = np.sum(dz, axis=SAMPLE_AXIS, keepdims=True)
             self.backward_caches['b'] = db
-        elif self.batch_normalization:
+        elif self.neural_network.batch_normalization:
             z = self.forward_caches['z']
             mu = self.forward_caches['mu']
             sigma_square = self.forward_caches['sigma_square']
@@ -115,7 +113,7 @@ class Layer:
             self.input_dim, self.output_dim
         ) / np.sqrt(n)
 
-        if self.batch_normalization and not self.is_output_layer:
+        if self.neural_network.batch_normalization and not self.is_output_layer:
             self.params['gamma'] = np.ones(
                 shape=(1, self.output_dim)
             )
