@@ -1,6 +1,13 @@
+"""
+下载地址：
+1、手写体数字：http://yann.lecun.com/exdb/mnist/
+2、fashion-mnist：https://github.com/zalandoresearch/fashion-mnist
+"""
+
 import gzip
 
 import numpy as np
+from ..log import logger
 from ..mytypes import *
 
 
@@ -35,3 +42,27 @@ def change_one_hot_label(y: ndarray) -> ndarray:
     for i, v in enumerate(y):
         y_temp[i, v] = 1
     return y_temp
+
+
+def show_mnist(data, x_size: int = 16, y_size: int = 9) -> None:
+    """
+    需先安装 PIL，并且 *nix 需安装 imagemagick，或者自己修改
+    *lib/python3.7/site-packages/PIL/ImageShow.py* 文件，
+    添加其他图片查看器。
+
+    :param data:
+    :param x_size:
+    :param y_size:
+    :return:
+    """
+    try:
+        from PIL import Image
+    except ImportError:
+        logger.error('需安装 PIL！')
+        return
+
+    imgs = Image.new('RGBA', (30 * x_size, 30 * y_size))  # 打底背景
+    for i in range(x_size*y_size):
+        img = Image.fromarray(data[i].reshape(28, 28))
+        imgs.paste(img, (i % x_size * 30, i // x_size * 30))  # 在打底背景上铺设照片
+    imgs.show()
