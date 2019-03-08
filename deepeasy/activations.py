@@ -45,9 +45,7 @@ def sigmoid_prime(z: ndarray) -> ndarray:
     return sigmoid(z) * (1 - sigmoid(z))
 
 
-def get_activation_func(name: Optional[str] = None) -> Tuple[Callable, Callable]:
-    if name is None:  # 代表不使用激活函数
-        return lambda z: z, lambda z: 1
+def get_activation_func(name: str) -> Tuple[Callable, Callable]:
 
     name = name.lower()
     if name == 'relu':
@@ -58,5 +56,7 @@ def get_activation_func(name: Optional[str] = None) -> Tuple[Callable, Callable]
         return tanh, tanh_prime
     elif name == 'sigmoid':
         return sigmoid, sigmoid_prime
+    elif name == '':
+        return lambda z: z, lambda z: 1  # 代表不使用激活函数
     else:
         raise Exception('Non-supported activation function')

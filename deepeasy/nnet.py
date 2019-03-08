@@ -12,6 +12,7 @@ from .layers import Layer
 from .optimizers import get_optimizer
 from .costs import get_cost_func
 from .metrics import get_accuracy
+from .dropout import update_keep_prob, check_keep_prob_range
 from .plot import plot_nn_history
 from .log import logger
 from .mytypes import *
@@ -50,8 +51,8 @@ class NeuralNetwork:
         self.seed: Optional[int] = seed
 
         self.batch_normalization: bool = batch_normalization
-        self.mu: float = 0.
-        self.sigma: float = 1.
+
+        self.is_train: bool = True
 
         self.train_count: int = 0  # 记录训练次数
         self.history: Dict[str, List[float]] = {}  # cost 记录等
@@ -70,7 +71,7 @@ class NeuralNetwork:
               beta1: float = 0.9,
               beta2: float = 0.999,
               l2_lambda: float = 0.,
-              dropout: bool = False,
+              dropout_keep_probs: Optional[Tuple[float]] = None,
               cost_func_name: str = 'cross_entropy') -> None:
         """
         :param x_train:
@@ -83,22 +84,26 @@ class NeuralNetwork:
         :param beta1:
         :param beta2:
         :param l2_lambda:
-        :param dropout:
+        :param dropout_keep_probs: 指定每层的 dropout_keep_prob
         :param cost_func_name:
 
         维度：
-
         w.shape = (每个神经元被连接数, 该层神经元数)
         b.shape = (1, 该层神经元数)
         x.shape = (样本数, 每个样本 feature 数)
         y.shape = (样本数, 每个样本 feature 数)
         """
 
+        if new_train:
+            self.reset_params(keep_history=True)
+
+        self.is_train = True
+
         optimizer = get_optimizer(optimizer_name, lr, beta1, beta2)
         cost_func = get_cost_func(cost_func_name)
 
-        if new_train:
-            self.reset_params(keep_history=True)
+        if dropout_keep_probs is not None:
+            update_keep_prob(self.layers, dropout_keep_probs)
 
         logger.info(f'开始训练，迭代次数：{epochs}')
 
@@ -137,11 +142,13 @@ class NeuralNetwork:
     def test_model(self, x: ndarray, y: ndarray) -> float:
 
         if self.batch_normalization:
-            x = self.normalize(x)
+            pass
         a = self.predict(x)
         return get_accuracy(a, y)
 
     def predict(self, x: ndarray) -> ndarray:
+
+        self.is_train = False
 
         x = np.atleast_2d(x)
         return self.forward_propration(x)
@@ -187,8 +194,9 @@ class NeuralNetwork:
         for i, layer_arch in enumerate(nn_architecture, 1):
             input_dim = layer_arch['input_dim']
             output_dim = layer_arch['output_dim']
-            activation = layer_arch.get('activation')  # 可能为 None
+            activation = layer_arch.get('activation', '').lower()
             dropout_keep_prob = layer_arch.get('dropout_keep_prob', 1.)
+            check_keep_prob_range(dropout_keep_prob)
 
             is_output_layer = False
             if i == layer_count:
@@ -205,11 +213,6 @@ class NeuralNetwork:
             )
 
             self.layers.append(layer)
-
-    def normalize(self, x: ndarray) -> ndarray:
-        """归一化。"""
-
-        return (x - self.mu) / (self.sigma + EPSILON)
 
     @staticmethod
     def mini_batch(x_train: ndarray,

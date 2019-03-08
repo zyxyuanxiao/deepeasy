@@ -28,7 +28,7 @@ def main() -> None:
     nn = nnet.NeuralNetwork(nn_architecture, batch_normalization=False, seed=100)
 
     nn.train(
-        x_train, y_train, 50,
+        x_train, y_train, 10,
         new_train=True,
         batch_size=600,
         lr=0.001,

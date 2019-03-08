@@ -1,3 +1,9 @@
+"""
+
+create:   2019-03-08
+modified:
+"""
+
 import numpy as np
 
 from .mytypes import *

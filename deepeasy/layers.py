@@ -1,8 +1,14 @@
+"""神经网络中的每一层。
+
+create:   2019-03-08
+modified:
+"""
+
 import numpy as np
 
 from .activations import get_activation_func
 from .dropout import inverted_dropout
-from .normalization import whitening
+from .normalization import whitening_train
 from .mytypes import *
 from .env import *
 
@@ -14,16 +20,16 @@ class Layer:
                  neural_network,
                  input_dim: int,
                  output_dim: int,
-                 activation: Optional[str],
+                 activation: str,
                  layer_idx: int,
                  *,
                  is_output_layer: bool = False,
-                 dropout_keep_prob: float) -> None:
+                 dropout_keep_prob: float = 1.) -> None:
 
         self.neural_network = neural_network
         self.input_dim: int = input_dim
         self.output_dim: int = output_dim
-        self.activation: str = activation.lower() if activation else ''
+        self.activation: str = activation.lower()
         self.layer_idx: int = layer_idx
         self.is_output_layer: bool = is_output_layer
         self.dropout_keep_prob: float = dropout_keep_prob
@@ -41,7 +47,7 @@ class Layer:
 
         z = a_pre @ self.params['w']
         if self.neural_network.batch_normalization and not self.is_output_layer:
-            z_white, mu, sigma_square = whitening(z)
+            z_white, mu, sigma_square = whitening_train(z)
             self.forward_caches['z_white'] = z_white
             self.forward_caches['mu'] = mu
             self.forward_caches['sigma_square'] = sigma_square
@@ -53,7 +59,7 @@ class Layer:
             a = self.g(z)
 
         # dropout
-        if self.dropout_keep_prob < 1.:
+        if 0. < self.dropout_keep_prob < 1.:
             a = inverted_dropout(a, self.dropout_keep_prob)
 
         self.forward_caches['a_pre'] = a_pre
@@ -107,7 +113,7 @@ class Layer:
         # 除以每个神经元被连接数的平方根
         # 如果用 ReLU，除以每个神经元被连接数的平方根乘 2，会更好
         n = self.input_dim
-        if self.activation.lower() == 'relu':
+        if self.activation == 'relu':
             n /= 2
         self.params['w'] = np.random.randn(
             self.input_dim, self.output_dim
