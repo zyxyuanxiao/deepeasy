@@ -140,7 +140,7 @@ nn.plot_history()
 python3 setup.py install
 ```
 
-## Support algorithms
+## Supported algorithms
 
 - Xavier Initializer
 - Mini Batch
