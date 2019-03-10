@@ -36,9 +36,8 @@ nn_architecture = [
     {'input_dim': 16, 'output_dim': 16, 'activation': 'relu'},
     {'input_dim': 16, 'output_dim': 10, 'activation': 'softmax'},
 ]
-# **注意**：Batch Normalization 尚未实现，
-# `batch_normalization` 应设为 `False`
-nn = NeuralNetwork(nn_architecture, batch_normalization=False, seed=100)
+
+nn = NeuralNetwork(nn_architecture, seed=100)
 ```
 
 载入 Mnist 数据集：
